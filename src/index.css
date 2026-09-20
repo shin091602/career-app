@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   デザイントークン
+   スマホ縦画面（幅375px）を基準に設計する。
+   ライトを基調にし、ダークは prefers-color-scheme で追随する。
+------------------------------------------------------------------ */
+:root {
+  color-scheme: light dark;
+
+  --c-bg: #f6f7f9;
+  --c-surface: #ffffff;
+  --c-surface-muted: #eef0f4;
+  --c-border: #d8dce4;
+  --c-text: #16191f;
+  --c-text-muted: #5b6270;
+  --c-accent: #2f5fd0;
+  --c-accent-text: #ffffff;
+  --c-good: #1f7a4d;
+  --c-improve: #a5601a;
+  --c-danger: #b0293a;
+
+  /* ノベル画面のテキストボックスは常に暗色（画像の上に重ねるため） */
+  --c-overlay: rgba(12, 16, 26, 0.86);
+  --c-overlay-text: #f4f6fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: #0f1218;
+    --c-surface: #181c24;
+    --c-surface-muted: #21262f;
+    --c-border: #333a45;
+    --c-text: #eef1f6;
+    --c-text-muted: #9ca4b3;
+    --c-accent: #6c93ea;
+    --c-accent-text: #0d1119;
+    --c-good: #5fc38d;
+    --c-improve: #e0ab5e;
+    --c-danger: #ef8a96;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-muted: var(--c-surface-muted);
+  --color-line: var(--c-border);
+  --color-ink: var(--c-text);
+  --color-ink-muted: var(--c-text-muted);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-text);
+  --color-good: var(--c-good);
+  --color-improve: var(--c-improve);
+  --color-danger: var(--c-danger);
+  --color-overlay: var(--c-overlay);
+  --color-overlay-ink: var(--c-overlay-text);
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Hiragino Sans',
+    'Noto Sans JP',
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* iOS の下端バー等を避ける */
+#root {
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+img {
+  max-width: 100%;
+}
+
+/* 本文中のタップ対象は 44px 以上を確保する */
+button,
+a {
+  touch-action: manipulation;
+}
