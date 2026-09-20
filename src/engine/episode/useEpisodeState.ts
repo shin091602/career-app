@@ -26,6 +26,12 @@ export interface EpisodeProgress {
   history: string[];
   gauges: Record<string, number>;
   log: LogEntry[];
+  /**
+   * 到達した結末のID。
+   * 答え合わせショットは複数の結末で使い回せるので、
+   * 「いまどの結末の答え合わせを見ているか」は導出せずここに持つ。
+   */
+  endingId: string | null;
   /** 結果カードを開いているか */
   resultOpen: boolean;
 }
@@ -33,7 +39,14 @@ export interface EpisodeProgress {
 function initialProgress(episode: Episode): EpisodeProgress {
   const gauges: Record<string, number> = {};
   for (const gauge of episode.gauges) gauges[gauge.key] = 0;
-  return { shotId: episode.startShotId, history: [], gauges, log: [], resultOpen: false };
+  return {
+    shotId: episode.startShotId,
+    history: [],
+    gauges,
+    log: [],
+    endingId: null,
+    resultOpen: false,
+  };
 }
 
 function applyEffects(
@@ -82,7 +95,7 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
     [],
   );
 
-  const progress: EpisodeProgress = { ...raw, log: raw.log ?? [] };
+  const progress: EpisodeProgress = { ...raw, log: raw.log ?? [], endingId: raw.endingId ?? null };
 
   const shotMap = useMemo(() => {
     const map = new Map<string, Shot>();
@@ -100,27 +113,26 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
     [episode.endings, currentId],
   );
 
-  /** 答え合わせの途中なら、どの結末の何枚目か */
-  const debriefPlace = useMemo(() => {
-    for (const candidate of episode.endings) {
-      const index = candidate.debriefShotIds.indexOf(currentId);
-      if (index >= 0) return { ending: candidate, index };
-    }
-    return null;
-  }, [episode.endings, currentId]);
+  /** 到達した結末（答え合わせ中・結果カード表示中もこれを使う） */
+  const reachedEnding = useMemo(
+    () => episode.endings.find((candidate) => candidate.id === progress.endingId),
+    [episode.endings, progress.endingId],
+  );
 
-  /**
-   * いま関わっている結末。
-   * 答え合わせの途中や結果カードの表示中は、currentId が答え合わせショットなので
-   * そちらからも引けるようにしておく。
-   */
-  const ending = endingShot ?? debriefPlace?.ending;
+  /** 答え合わせの途中なら、その何枚目か */
+  const debriefIndex = reachedEnding ? reachedEnding.debriefShotIds.indexOf(currentId) : -1;
 
-  // 結末に到達したら回収済みとして記録する
+  /** いま関わっている結末 */
+  const ending = reachedEnding ?? endingShot;
+
+  // 結末のショットに入ったら、到達した結末として記録する
   useEffect(() => {
     if (!endingShot) return;
     setCollected((prev) => (prev.includes(endingShot.id) ? prev : [...prev, endingShot.id]));
-  }, [endingShot, setCollected]);
+    setProgress((prev) =>
+      prev.endingId === endingShot.id ? prev : { ...prev, endingId: endingShot.id },
+    );
+  }, [endingShot, setCollected, setProgress]);
 
   // 再生したショットを字幕ログに積む（同じショットを続けて積まない）
   useEffect(() => {
@@ -174,15 +186,15 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
     }
 
     // 答え合わせの途中 → 次の答え合わせ、最後まで来たら結果カードへ
-    if (debriefPlace) {
-      const next = debriefPlace.ending.debriefShotIds[debriefPlace.index + 1];
+    if (reachedEnding && debriefIndex >= 0) {
+      const next = reachedEnding.debriefShotIds[debriefIndex + 1];
       if (next) goTo(next);
       else setProgress((prev) => ({ ...prev, resultOpen: true }));
       return;
     }
 
     if (shot.next) goTo(shot.next);
-  }, [endingShot, debriefPlace, shot.next, goTo, setProgress]);
+  }, [endingShot, reachedEnding, debriefIndex, shot.next, goTo, setProgress]);
 
   const pick = useCallback(
     (choice: Choice) => goTo(choice.nextShotId, choice.effects, choice.label),
@@ -202,8 +214,8 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
       ids.push(shot.branch.onTimeout.nextShotId);
     } else if (endingShot) {
       if (endingShot.debriefShotIds[0]) ids.push(endingShot.debriefShotIds[0]);
-    } else if (debriefPlace) {
-      const next = debriefPlace.ending.debriefShotIds[debriefPlace.index + 1];
+    } else if (reachedEnding && debriefIndex >= 0) {
+      const next = reachedEnding.debriefShotIds[debriefIndex + 1];
       if (next) ids.push(next);
     } else if (shot.next) {
       ids.push(shot.next);
@@ -211,7 +223,7 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
 
     const unique = [...new Set(ids)].filter((id) => id !== currentId);
     return unique.map((id) => shotMap.get(id)).filter((s): s is Shot => Boolean(s));
-  }, [shot, endingShot, debriefPlace, currentId, shotMap]);
+  }, [shot, endingShot, reachedEnding, debriefIndex, currentId, shotMap]);
 
   return {
     shot,
