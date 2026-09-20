@@ -7,3 +7,6 @@ dist/
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# 素材の取り込み用（npm run import-assets）
+inbox/
