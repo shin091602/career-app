@@ -2,7 +2,9 @@ import type { Scenario } from '../../src/types';
 
 /**
  * 広告代理店社員のノベル（未着手）。
- * 担当worktreeのエージェントがここを埋め、
- * src/prototypes.ts の novel-ad の status を 'ready' に変える。
+ * ここに Scenario を入れると、ホーム画面の「準備中」が自動で外れる。
+ * 共有ファイルを書き換える必要はない。
+ *
+ * エクスポート名 `scenario` は4つのプロトタイプで共通なので変更しないこと。
  */
-export const adScenario: Scenario | null = null;
+export const scenario: Scenario | null = null;

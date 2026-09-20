@@ -4,8 +4,11 @@ import type { Scenario } from '../../src/types';
  * 動作確認用の最小サンプル（銀行員・法人営業）。
  * 本番コンテンツは worktree 側で差し替える。
  * 取材・裏取りをしていないため verified: false、sources は空のままにしてある。
+ *
+ * この `scenario` が null でなくなった時点で、ホーム画面の「準備中」が自動で外れる。
+ * エクスポート名 `scenario` は4つのプロトタイプで共通なので変更しないこと。
  */
-export const bankScenario: Scenario = {
+export const scenario: Scenario | null = {
   id: 'novel-bank-sample',
   title: '町工場からの相談',
   jobTitle: '銀行員（法人営業）',

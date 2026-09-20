@@ -4,8 +4,11 @@ import type { TaskSet } from '../../src/types';
  * 動作確認用の最小サンプル（銀行員・法人営業）。課題は1問だけ。
  * 本番コンテンツは worktree 側で差し替える。
  * 取材・裏取りをしていないため verified: false、sources は空のままにしてある。
+ *
+ * この `taskSet` が null でなくなった時点で、ホーム画面の「準備中」が自動で外れる。
+ * エクスポート名 `taskSet` は4つのプロトタイプで共通なので変更しないこと。
  */
-export const bankTaskSet: TaskSet = {
+export const taskSet: TaskSet | null = {
   id: 'task-bank-sample',
   title: '融資の相談にどう答える？',
   jobTitle: '銀行員（法人営業）',

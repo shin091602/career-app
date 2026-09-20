@@ -36,7 +36,7 @@ src/components/     共通UI
 src/pages/          ホーム、各プロトタイプの入口ページ
 src/types/          シナリオ・課題のデータ型（プロトタイプ間の契約）
 src/lib/            localStorage などの共通処理
-src/prototypes.ts   4つのプロトタイプの一覧と公開状態
+src/prototypes.ts   4つのプロトタイプの一覧（公開状態は持たない）
 content/<名前>/     各プロトタイプのコンテンツ（シナリオ・課題）
 api/feedback.ts     AIフィードバックのAPI
 public/assets/      画像素材（素材IDで参照）
@@ -51,7 +51,6 @@ docs/asset-list.md  必要な素材の一覧
 
 - 担当する `content/<プロトタイプ名>/` の中身
 - そのプロトタイプ専用のページ（例：`novel-ad` なら `src/pages/NovelAdPage.tsx`）
-- `src/prototypes.ts` のうち、担当プロトタイプの `status` を `'preparing'` → `'ready'` に変える1行
 - `docs/asset-list.md` への追記（自分の担当セクション）
 
 ### 編集してはいけない範囲
@@ -59,10 +58,25 @@ docs/asset-list.md  必要な素材の一覧
 - `src/engine/`
 - `src/types/`
 - `api/`
-- `src/components/`、`src/lib/`、`src/App.tsx`、共通のCSS
+- `src/prototypes.ts`
+- `src/components/`、`src/lib/`、`src/App.tsx`、`src/pages/HomePage.tsx`、共通のCSS
 
 これらに変更が必要になった場合は、**実装せずに必要な変更内容を報告する**（main側で対応する）。
 報告には「どのファイルの何を、なぜ変えたいか」「回避策を試したか」を書く。
+
+### 「準備中」の外し方
+
+公開状態を管理するファイルはない。**コンテンツの有無から自動で判定される。**
+
+- `content/novel-*/scenario.ts` の `export const scenario` が `null` 以外になれば公開
+- `content/task-*/tasks.ts` の `export const taskSet` が `null` 以外になれば公開
+
+`null` のままなら、ホームでは「準備中」として遷移できない状態で表示される。
+**エクスポート名（`scenario` / `taskSet`）と `| null` を含む型注釈は変更しないこと。**
+共有ファイルを書き換える必要はなく、書き換えるとマージ時に衝突する。
+
+ホームのカードに出る職業名と説明は、コンテンツの `jobTitle` と `description` が使われる
+（未投入のあいだだけ `src/prototypes.ts` の暫定文が出る）。
 
 ## コンテンツのルール
 
