@@ -5,6 +5,7 @@ import { NovelAdPage } from './pages/NovelAdPage';
 import { TaskBankPage } from './pages/TaskBankPage';
 import { TaskAdPage } from './pages/TaskAdPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { StyleLabPage } from './pages/StyleLabPage';
 
 const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
@@ -12,6 +13,7 @@ const router = createBrowserRouter([
   { path: '/novel-ad', element: <NovelAdPage /> },
   { path: '/task-bank', element: <TaskBankPage /> },
   { path: '/task-ad', element: <TaskAdPage /> },
+  { path: '/style-lab', element: <StyleLabPage /> },
   { path: '*', element: <NotFoundPage /> },
 ]);
 

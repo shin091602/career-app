@@ -49,6 +49,10 @@ export function HomePage() {
           このアプリは開発中のプロトタイプです。登場する会社・人物・数値はすべて架空のもので、
           実在のものとは関係ありません。
         </p>
+
+        <Link to="/style-lab" className="block text-xs text-ink-muted underline">
+          開発用：デザイン3案を見比べる
+        </Link>
       </div>
     </AppShell>
   );

@@ -3,7 +3,10 @@
 
    html 要素に data-novel-theme="drama" | "anime" | "business" が立つと、
    その案のトークンで既定値を上書きする（src/theme/themes.ts の ACTIVE_THEME）。
-   /style-lab では比較のため、同じ属性をページ内の div に立てている。
+
+   /style-lab では比較のため、同じ属性をページ内の div に立てる。そのため
+   セレクタは :root 限定にせず、:not(:root) の側も併記している
+   （どちらも詳細度 (0,2,0) で、既定値の :root より強い）。
 
    テーマは「固定の雰囲気」を持つので、テーマブロック内では
    prefers-color-scheme を見ない（:root[data-novel-theme] の方が
@@ -42,7 +45,8 @@
 }
 
 /* ---------------- A ドラマ調 ---------------- */
-:root[data-novel-theme='drama'] {
+:root[data-novel-theme='drama'],
+[data-novel-theme='drama']:not(:root) {
   --c-bg: #10131a;
   --c-surface: #191d26;
   --c-surface-muted: #21262f;
@@ -86,7 +90,8 @@
 }
 
 /* ---------------- B お仕事アニメ調 ---------------- */
-:root[data-novel-theme='anime'] {
+:root[data-novel-theme='anime'],
+[data-novel-theme='anime']:not(:root) {
   --c-bg: #fff8f0;
   --c-surface: #ffffff;
   --c-surface-muted: #fff0e2;
@@ -130,7 +135,8 @@
 }
 
 /* ---------------- C ビジネスツール調 ---------------- */
-:root[data-novel-theme='business'] {
+:root[data-novel-theme='business'],
+[data-novel-theme='business']:not(:root) {
   --c-bg: #f4f6f8;
   --c-surface: #ffffff;
   --c-surface-muted: #eceff3;
