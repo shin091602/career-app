@@ -36,6 +36,7 @@ src/components/     共通UI
 src/pages/          ホーム、各プロトタイプの入口ページ
 src/types/          シナリオ・課題のデータ型（プロトタイプ間の契約）
 src/lib/            localStorage などの共通処理
+src/theme/          デザイン3案のテーマ定義と、適用するテーマ
 src/prototypes.ts   4つのプロトタイプの一覧（公開状態は持たない）
 content/<名前>/     各プロトタイプのコンテンツ（シナリオ・課題）
 api/feedback.ts     AIフィードバックのAPI
@@ -59,6 +60,7 @@ docs/asset-list.md  必要な素材の一覧
 - `src/types/`
 - `api/`
 - `src/prototypes.ts`
+- `src/theme/`
 - `src/components/`、`src/lib/`、`src/App.tsx`、`src/pages/HomePage.tsx`、共通のCSS
 
 これらに変更が必要になった場合は、**実装せずに必要な変更内容を報告する**（main側で対応する）。
@@ -86,6 +88,70 @@ docs/asset-list.md  必要な素材の一覧
 - **実在の企業名・ロゴ・実在人物は使わない。** 登場する会社・人物・数値はすべて架空にする
 - 対象読者は中高生。難しい用語には `terms` で短い解説をつける（1〜2文）
 - 仕事の大変さも省かずに描く。ただし特定の職業を貶めない
+
+## 演出の書き方（シナリオでの指定方法）
+
+演出はすべて `Scene` の**任意フィールド**として書く。書かなければ素の会話場面になる。
+実装済みの見本は `content/novel-bank/scenario.ts` にあるので、まずそれを読むこと。
+
+| フィールド | 何ができるか | 書き方 |
+| --- | --- | --- |
+| `bgAssetId` | 画面全体の背景 | 素材ID（9:16） |
+| `characters` | 立ち絵を左・中央・右に置く | `[{ assetId, slot: 'left'\|'center'\|'right', speaking?: true }]` |
+| `transition` | 場面に入るときの転換 | `'fade'`（ふわり）／`'blackout'`（暗転を挟む）／`'none'` |
+| `telop` | 時刻と場所のテロップ | `{ time: '9:02', place: '港南支店 融資課' }` |
+| `interrupt` | チャット・メール・電話の割り込み | `{ kind: 'chat'\|'mail'\|'call', from, subject?, body, dismissLabel? }` |
+| `document` | 書類をズームで見せる | `{ title, material, assetId?, autoOpen? }` |
+| `timeLimitSec` ＋ `onTimeout` | 制限時間つきの選択肢 | 下の例を参照 |
+| `sound` | BGM・効果音 | `{ bgm?, se?, stopBgm? }` |
+| `terms` | 難語の解説 | `[{ term, description }]` |
+
+### 書き方の例
+
+```ts
+{
+  id: 's05',
+  kind: 'dialogue',
+  speaker: '山田社長',
+  text: '3,000万円の機械を入れたい。\n……なんとか、貸してもらえないかな。',
+  bgAssetId: 'bg-bank-factory',
+  transition: 'blackout',
+  telop: { time: '10:30', place: '山田製作所 応接スペース' },
+  characters: [
+    { assetId: 'char-senior-banker-normal', slot: 'left' },
+    { assetId: 'char-factory-owner-worried', slot: 'right', speaking: true },
+  ],
+  timeLimitSec: 12,
+  onTimeout: {
+    label: '答えられず、沈黙が流れた',
+    nextSceneId: 's06-silence',
+    effects: [{ key: 'trust', delta: -1 }],
+  },
+  choices: [
+    { label: '詳しく聞く', nextSceneId: 's06-listen', effects: [{ key: 'risk', delta: 2 }] },
+  ],
+}
+```
+
+### 注意
+
+- **立ち絵の表情差分は素材IDで分ける。** 型は増やさない
+  （例：`char-senior-banker-normal` / `char-senior-banker-serious`）
+- `speaking: true` は1場面につき1体まで。話している人を手前に出して明るくする
+- `timeLimitSec` を書くときは `onTimeout` も必ず書く。時間切れは
+  「答えないまま時間が過ぎた」という結果として扱い、その場面へ進める
+- `document` の `autoOpen: true` は場面に入った瞬間に開く。
+  `false`（既定）なら「資料を見る」ボタンが出て、利用者が自分で開く
+- **音は既定でミュート。** 利用者が画面右上のボタンをタップするまで鳴らないので、
+  音が鳴ることを前提にした演出（音だけで伝わる情報）は書かない
+- 新しい素材・音が必要になったら、実装より先に `docs/asset-list.md` に追記する
+- 文字送りの途中でもタップで全文が出る。長すぎる本文は場面を分ける
+
+### 見た目（テーマ）
+
+配色・フォント・テキストボックス・選択肢ボタンの見た目は
+`src/theme/` のテーマで決まる。3案の比較は `/style-lab` で見られる。
+**テーマとその適用（`ACTIVE_THEME`）は共通基盤なので、worktree側では変更しない。**
 
 ## 素材のルール
 
