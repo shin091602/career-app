@@ -1,12 +1,9 @@
 export { AppShell } from './AppShell';
-export { AssetImage } from './AssetImage';
-export type { AssetKind } from './AssetImage';
 export { Badge } from './Badge';
 export { Button } from './Button';
 export { Card } from './Card';
 export { ErrorBanner } from './ErrorBanner';
 export { MaterialView } from './MaterialView';
-export { NovelShell } from './NovelShell';
 export { PasscodeField } from './PasscodeField';
 export { SourceNote } from './SourceNote';
 export { Spinner } from './Spinner';

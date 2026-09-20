@@ -182,3 +182,13 @@ a {
     opacity: 1;
   }
 }
+
+/* 静止画で代替するときのゆっくりズーム */
+@keyframes ken-burns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(0, -1.5%, 0);
+  }
+}

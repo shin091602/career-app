@@ -1,13 +1,21 @@
-import { NovelPlayer } from '../engine/novel';
-import { scenario } from '../../content/novel-ad/scenario';
+import { useSearchParams } from 'react-router-dom';
+import { EpisodePlayer } from '../engine/episode';
+import { episodes } from '../../content/novel-ad/episodes';
 import { getPrototype } from '../prototypes';
 import { PreparingNotice } from './PreparingNotice';
 
 const prototype = getPrototype('novel-ad');
 
-/** ノベル（広告代理店社員）の入口。シナリオが入るまでは準備中を出す */
+/**
+ * ショートドラマ（広告代理店社員）の入口。
+ * 既定では1本目を再生する。?episode=<id> で別のエピソードを開ける（開発用）。
+ */
 export function NovelAdPage() {
-  if (!scenario) return <PreparingNotice prototype={prototype} />;
+  const [params] = useSearchParams();
+  const requested = params.get('episode');
+  const episode = requested ? episodes.find((item) => item.id === requested) : episodes[0];
 
-  return <NovelPlayer scenario={scenario} prototypeId={prototype.id} />;
+  if (!episode) return <PreparingNotice prototype={prototype} />;
+
+  return <EpisodePlayer episode={episode} prototypeId={prototype.id} />;
 }

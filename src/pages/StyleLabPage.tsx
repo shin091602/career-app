@@ -1,47 +1,72 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import type { Choice, Interrupt, Material, Scene } from '../types';
-import { MaterialView } from '../components';
-import { TextBox } from '../engine/novel/TextBox';
-import { ChoiceList } from '../engine/novel/ChoiceList';
-import { StageCharacter } from '../engine/novel/StageCharacter';
+import type { Branch, EndingCard, Episode, GaugeDef, Interrupt, Shot, Subtitle } from '../types';
+import { SubtitleLayer } from '../engine/episode/SubtitleLayer';
+import { ChoiceOverlay } from '../engine/episode/ChoiceOverlay';
+import { GaugeBar } from '../engine/episode/GaugeBar';
+import { TelopLayer } from '../engine/episode/TelopLayer';
+import { InterruptLayer } from '../engine/episode/InterruptLayer';
+import { ResultCard } from '../engine/episode/ResultCard';
+import { Storyboard } from '../engine/episode/Storyboard';
 import { usePersistentState } from '../lib/usePersistentState';
 import { THEMES, THEME_ATTRIBUTE, type ThemeId } from '../theme/themes';
 
-/** 見本に使う場面。実際のサンプルシナリオと同じ雰囲気の文にしてある */
-const SAMPLE_SPEAKER = '山田社長';
-const SAMPLE_TEXT =
-  '注文が増えてきてね。今の機械じゃ追いつかないんだ。\n3,000万円の機械を入れたい。\n\n……なんとか、貸してもらえないかな。';
+const SAMPLE_SUBTITLE: Subtitle = {
+  speaker: '山田社長',
+  text: 'なんとか、貸してもらえないかな。',
+  atSec: 0,
+};
 
-const SAMPLE_CHOICES: Choice[] = [
-  { label: '「お任せください、すぐ手続きします」と即答する', nextSceneId: 'x' },
-  { label: '注文が増えている理由と、返済の見込みを詳しく聞く', nextSceneId: 'x' },
-  { label: '「今は難しいと思います」とその場で断る', nextSceneId: 'x' },
-];
+const SAMPLE_BRANCH: Branch = {
+  timeLimitSec: 8,
+  onTimeout: { label: '答えられない', nextShotId: 'x' },
+  choices: [
+    { label: 'すぐ手配します', nextShotId: 'x' },
+    { label: '詳しく聞かせて', nextShotId: 'x' },
+  ],
+};
 
-const SAMPLE_CHARACTERS: Scene['characters'] = [
-  { assetId: 'char-senior-banker-normal', slot: 'left' },
-  { assetId: 'char-factory-owner-worried', slot: 'center', speaking: true },
-  { assetId: 'char-senior-banker-serious', slot: 'right' },
+const SAMPLE_GAUGES: GaugeDef[] = [
+  { key: 'trust', label: '信頼', description: '相手の話を正面から受け止められたか。' },
+  { key: 'result', label: '成果', description: '仕事として前に進められたか。' },
 ];
 
 const SAMPLE_INTERRUPT: Interrupt = {
   kind: 'chat',
   from: '融資課長',
-  body: '山田製作所の件、訪問前にここ3年の数字を押さえておいて。\n感触だけで持ち帰ってこないように。',
+  body: '訪問前に、ここ3年の数字を押さえておいて。',
 };
 
-const SAMPLE_MATERIAL: Material = {
-  kind: 'table',
-  id: 'lab-table',
-  title: '業績の推移（単位：万円）',
-  headers: ['年度', '売上高', '営業利益'],
-  rows: [
-    ['2023年度', '18,000', '900'],
-    ['2024年度', '19,500', '1,050'],
-    ['2025年度', '22,000', '1,200'],
-  ],
+const SAMPLE_SHOT: Shot = {
+  id: 's03-desk-figures',
+  kind: 'story',
+  durationSec: 6,
+  videoAssetId: 'v-s03-desk-figures',
+  subtitles: [],
 };
+
+const SAMPLE_ENDING: EndingCard = {
+  id: 'ending-carry',
+  shotId: 'x',
+  type: '持ち帰り型',
+  summary:
+    'その場で答えを出さず、確かめるべきことを持ち帰った。慎重だが、相手を待たせた分だけ信頼は試される。',
+  debriefShotIds: [],
+};
+
+const SAMPLE_EPISODE = {
+  id: 'lab',
+  title: 'lab',
+  jobTitle: '銀行員',
+  description: '',
+  audioMode: 'embedded',
+  startShotId: 'x',
+  shots: [],
+  gauges: SAMPLE_GAUGES,
+  endings: [SAMPLE_ENDING, { ...SAMPLE_ENDING, id: 'ending-decide', type: '即断型' }],
+  verified: false,
+  sources: [],
+} satisfies Episode;
 
 function Panel({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -49,6 +74,19 @@ function Panel({ label, children }: { label: string; children: ReactNode }) {
       <h2 className="text-xs font-bold text-ink-muted">{label}</h2>
       {children}
     </section>
+  );
+}
+
+/** 縦画面のプレイヤーを切り取った枠。見本はこの中に実物を描く */
+function PhoneFrame({ children, tall }: { children: ReactNode; tall?: boolean }) {
+  return (
+    <div
+      className={`relative w-full overflow-hidden rounded-xl bg-black ${
+        tall ? 'aspect-[9/16]' : 'aspect-[3/4]'
+      }`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -90,79 +128,62 @@ export function StyleLabPage() {
 
       {/* この div の中だけ、選んだ案のトークンが効く */}
       <div {...{ [THEME_ATTRIBUTE]: themeId }} className="space-y-6 bg-bg px-4 py-5">
-        <Panel label="会話（立ち絵は左・中央・右／話している人を強調）">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-surface-muted">
-            {(SAMPLE_CHARACTERS ?? []).map((character) => (
-              <StageCharacter
-                key={character.slot}
-                character={character}
-                prototypeId="novel-bank"
-                hasSpeaker
-              />
-            ))}
-            <div className="absolute inset-x-0 bottom-0">
-              <TextBox speaker={SAMPLE_SPEAKER} text={SAMPLE_TEXT} fullText={SAMPLE_TEXT} done />
-            </div>
+        <Panel label="字幕（動画の上に重ねる）">
+          <PhoneFrame>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#2a2f3a] to-[#0d1016]" />
+            <SubtitleLayer subtitle={SAMPLE_SUBTITLE} />
+          </PhoneFrame>
+        </Panel>
+
+        <Panel label="2択（タップ／左右スワイプ・制限時間つき）">
+          <PhoneFrame>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#3a2f2a] to-[#0d1016]" />
+            <ChoiceOverlay
+              branch={SAMPLE_BRANCH}
+              onPick={() => undefined}
+              remainingRatio={0.3}
+              remainingSec={3}
+            />
+          </PhoneFrame>
+        </Panel>
+
+        <Panel label="ゲージ（選択の直後に動く）">
+          <div className="rounded-xl bg-black p-3">
+            <GaugeBar gauges={SAMPLE_GAUGES} values={{ trust: 2, result: -1 }} />
           </div>
-        </Panel>
-
-        <Panel label="選択肢">
-          <ChoiceList choices={SAMPLE_CHOICES} onPick={() => undefined} />
-        </Panel>
-
-        <Panel label="選択肢（制限時間つき）">
-          <ChoiceList
-            choices={SAMPLE_CHOICES.slice(0, 2)}
-            onPick={() => undefined}
-            remainingRatio={0.28}
-            remainingSec={4}
-          />
         </Panel>
 
         <Panel label="時刻・場所のテロップ">
-          <div className="flex justify-center">
-            <div
-              className="px-4 py-1.5 text-sm font-medium tracking-wide"
-              style={{
-                background: 'var(--novel-telop-bg)',
-                color: 'var(--novel-telop-ink)',
-                borderRadius: 'var(--novel-telop-radius)',
-                fontFamily: 'var(--novel-font-display)',
-              }}
-            >
-              10:30 ／ 山田製作所 応接スペース
-            </div>
-          </div>
+          <PhoneFrame>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#2f3a2a] to-[#0d1016]" />
+            <TelopLayer telop={{ time: '10:30', place: '山田製作所 応接' }} />
+          </PhoneFrame>
         </Panel>
 
         <Panel label="割り込み（チャット・メール・電話）">
-          <div
-            className="overflow-hidden"
-            style={{
-              background: 'var(--novel-card-bg)',
-              color: 'var(--c-text)',
-              borderRadius: 'var(--novel-box-radius)',
-              borderWidth: 'var(--novel-box-border-width)',
-              borderStyle: 'solid',
-              borderColor: 'var(--novel-box-border)',
-              fontFamily: 'var(--novel-font-body)',
-            }}
-          >
-            <div
-              className="flex items-center justify-between px-4 py-2 text-xs font-bold"
-              style={{ background: 'var(--c-accent)', color: 'var(--c-accent-text)' }}
-            >
-              <span>チャット</span>
-              <span>{SAMPLE_INTERRUPT.from}</span>
-            </div>
-            <p className="px-4 py-3 whitespace-pre-wrap text-base leading-relaxed">
-              {SAMPLE_INTERRUPT.body}
-            </p>
-          </div>
+          <PhoneFrame>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#2a333a] to-[#0d1016]" />
+            <InterruptLayer interrupt={SAMPLE_INTERRUPT} onDismiss={() => undefined} />
+          </PhoneFrame>
         </Panel>
 
-        <Panel label="書類のズーム表示">
-          <MaterialView material={SAMPLE_MATERIAL} />
+        <Panel label="結果カード（タイプ診断とエンディング回収）">
+          <PhoneFrame tall>
+            <ResultCard
+              episode={SAMPLE_EPISODE}
+              ending={SAMPLE_ENDING}
+              gauges={SAMPLE_GAUGES}
+              values={{ trust: 2, result: 1 }}
+              collectedEndingIds={['ending-carry']}
+              onRestart={() => undefined}
+            />
+          </PhoneFrame>
+        </Panel>
+
+        <Panel label="素材が無いときの代替（絵コンテ風）">
+          <PhoneFrame>
+            <Storyboard shot={SAMPLE_SHOT} elapsedSec={2.4} />
+          </PhoneFrame>
         </Panel>
 
         <p className="text-xs text-ink-muted">

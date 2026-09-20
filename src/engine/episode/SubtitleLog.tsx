@@ -1,14 +1,9 @@
-import type { BacklogEntry } from './useNovelState';
+import type { LogEntry } from './useEpisodeState';
 
-interface BacklogProps {
-  entries: BacklogEntry[];
-  onClose: () => void;
-}
-
-/** 過去のセリフと、自分が選んだ選択肢を時系列で見返せる画面 */
-export function Backlog({ entries, onClose }: BacklogProps) {
+/** これまでの字幕と、自分が選んだことを見返せる画面 */
+export function SubtitleLog({ entries, onClose }: { entries: LogEntry[]; onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-40 flex flex-col bg-black/80">
+    <div className="absolute inset-0 z-50 flex flex-col bg-black/85">
       <div
         className="flex items-center justify-between px-4 pb-2"
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}
@@ -17,7 +12,7 @@ export function Backlog({ entries, onClose }: BacklogProps) {
           className="text-base font-bold text-white"
           style={{ fontFamily: 'var(--novel-font-display)' }}
         >
-          これまでの流れ
+          これまでの字幕
         </h2>
         <button
           onClick={onClose}
@@ -36,17 +31,12 @@ export function Backlog({ entries, onClose }: BacklogProps) {
         ) : (
           entries.map((entry, index) => (
             <div
-              key={`${entry.sceneId}-${index}`}
-              className="px-3 py-2"
-              style={{
-                background: entry.kind === 'choice' ? 'transparent' : 'var(--novel-card-bg)',
-                color: entry.kind === 'choice' ? '#ffffff' : 'var(--c-text)',
-                borderRadius: 'var(--novel-box-radius)',
-                borderWidth: entry.kind === 'choice' ? '1px' : '0',
-                borderStyle: 'dashed',
-                borderColor: 'rgba(255,255,255,0.35)',
-                fontFamily: 'var(--novel-font-body)',
-              }}
+              key={`${entry.shotId}-${index}`}
+              className={
+                entry.kind === 'choice'
+                  ? 'rounded-xl border border-dashed border-white/40 px-3 py-2 text-white'
+                  : 'rounded-xl bg-white/10 px-3 py-2 text-white'
+              }
             >
               {entry.kind === 'choice' ? (
                 <p className="text-sm">
@@ -60,7 +50,7 @@ export function Backlog({ entries, onClose }: BacklogProps) {
                       {entry.speaker}
                     </p>
                   )}
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.text}</p>
+                  <p className="text-sm leading-relaxed">{entry.text}</p>
                 </>
               )}
             </div>

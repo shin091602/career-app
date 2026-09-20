@@ -1,24 +1,13 @@
-import { useEffect, useState } from 'react';
-import type { Telop as TelopData } from '../../types';
+import type { Telop } from '../../types';
 
-/** テロップを出しておく時間 */
-const VISIBLE_MS = 2600;
+/** テロップを出しておく時間（秒） */
+export const TELOP_VISIBLE_SEC = 2.6;
 
 /**
  * 時刻と場所のテロップ（例：「9:02 ／ 港南支店 融資課」）。
- * 場面に入った直後だけ出して、自動で消える。
+ * 表示はショットの経過時間で決まるので、一時停止すれば止まる。
  */
-export function Telop({ telop, sceneId }: { telop: TelopData; sceneId: string }) {
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), VISIBLE_MS);
-    return () => clearTimeout(timer);
-  }, [sceneId]);
-
-  if (!visible) return null;
-
+export function TelopLayer({ telop }: { telop: Telop }) {
   const parts = [telop.time, telop.place].filter(Boolean);
 
   return (
@@ -33,7 +22,7 @@ export function Telop({ telop, sceneId }: { telop: TelopData; sceneId: string })
           color: 'var(--novel-telop-ink)',
           borderRadius: 'var(--novel-telop-radius)',
           fontFamily: 'var(--novel-font-display)',
-          animation: 'novel-telop-in 2600ms ease-in-out forwards',
+          animation: `novel-telop-in ${TELOP_VISIBLE_SEC}s ease-in-out forwards`,
         }}
       >
         {parts.join(' ／ ')}
