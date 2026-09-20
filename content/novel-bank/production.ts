@@ -34,7 +34,7 @@ export const production: ProductionNotes = {
     cameraNote: `${FIRST_PERSON} 自分の席から先輩を見上げる角度。`,
     characters: [SAEKI],
   },
-  's03-desk': {
+  's03-chat': {
     imagePrompt:
       'デスクの上の決算資料。数字の並んだ表とボールペン、スマートフォンが置かれている。手元だけが画面下に少し入る。日本のアニメ調、縦9:16、読める文字は入れない。',
     motionPrompt: '手が資料のページをめくり、指が数字の行をなぞる。',
