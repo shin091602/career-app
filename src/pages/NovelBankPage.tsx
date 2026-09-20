@@ -1,4 +1,3 @@
-import { AppShell } from '../components';
 import { NovelPlayer } from '../engine/novel';
 import { scenario } from '../../content/novel-bank/scenario';
 import { getPrototype } from '../prototypes';
@@ -10,9 +9,5 @@ const prototype = getPrototype('novel-bank');
 export function NovelBankPage() {
   if (!scenario) return <PreparingNotice prototype={prototype} />;
 
-  return (
-    <AppShell title={scenario.title} subtitle={scenario.jobTitle} showBack>
-      <NovelPlayer scenario={scenario} prototypeId={prototype.id} />
-    </AppShell>
-  );
+  return <NovelPlayer scenario={scenario} prototypeId={prototype.id} />;
 }

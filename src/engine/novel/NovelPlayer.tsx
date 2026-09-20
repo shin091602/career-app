@@ -1,7 +1,10 @@
 import type { PrototypeId, Scenario } from '../../types';
-import { Button, SourceNote } from '../../components';
+import { NovelShell, TermList } from '../../components';
 import { useNovelState } from './useNovelState';
-import { SceneView } from './SceneView';
+import { useTypewriter } from './useTypewriter';
+import { useSceneTransition } from './useSceneTransition';
+import { Stage } from './Stage';
+import { TextBox } from './TextBox';
 import { ChoiceList } from './ChoiceList';
 import { EndingView } from './EndingView';
 
@@ -16,56 +19,77 @@ export interface NovelPlayerProps {
  */
 export function NovelPlayer({ scenario, prototypeId }: NovelPlayerProps) {
   const state = useNovelState(scenario, prototypeId);
-  const { scene, ending, progress } = state;
+  const { shown: scene, phase } = useSceneTransition(state.scene);
+  const typewriter = useTypewriter(scene.text);
 
-  const canGoBack = progress.history.length > 0 || progress.debriefIndex >= 0;
+  const hasChoices = Boolean(scene.choices?.length);
 
-  return (
-    <div className="space-y-4">
-      {ending ? (
+  // タップ1回目で全文表示、2回目で次へ
+  const onTapText = () => {
+    if (!typewriter.done) {
+      typewriter.skip();
+      return;
+    }
+    if (!hasChoices && state.canAdvance) state.advance();
+  };
+
+  if (state.ending) {
+    return (
+      <NovelShell>
         <EndingView
           scenario={scenario}
-          ending={ending}
+          ending={state.ending}
           endingScene={scene}
           debriefPosition={state.debriefPosition}
-          paramValues={progress.params}
+          paramValues={state.progress.params}
           prototypeId={prototypeId}
+          phase={phase}
           canAdvance={state.canAdvance}
           onAdvance={state.advance}
           onRestart={state.restart}
         />
-      ) : (
-        <>
-          <SceneView
-            scene={scene}
-            prototypeId={prototypeId}
-            onTapText={state.canAdvance ? state.advance : undefined}
-          />
+      </NovelShell>
+    );
+  }
 
-          {scene.choices && scene.choices.length > 0 ? (
-            <ChoiceList choices={scene.choices} onPick={state.pick} />
-          ) : state.canAdvance ? (
-            <Button block onClick={state.advance}>
-              次へ
-            </Button>
-          ) : (
-            <Button block variant="secondary" onClick={state.restart}>
+  return (
+    <NovelShell>
+      <Stage scene={scene} prototypeId={prototypeId} phase={phase} />
+
+      <div className="absolute inset-x-0 bottom-0 z-30">
+        {hasChoices && typewriter.done ? (
+          <ChoiceList choices={scene.choices ?? []} onPick={state.pick} />
+        ) : (
+          <TextBox
+            speaker={scene.speaker}
+            text={typewriter.shown}
+            fullText={scene.text}
+            done={typewriter.done}
+            onTap={onTapText}
+          >
+            {typewriter.done && scene.terms && scene.terms.length > 0 && (
+              <div className="mt-3">
+                <TermList terms={scene.terms} />
+              </div>
+            )}
+          </TextBox>
+        )}
+
+        {/* 選択肢も次もない終端では、やり直しだけ出す */}
+        {!hasChoices && !state.canAdvance && typewriter.done && (
+          <div
+            className="px-3 pt-2"
+            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <button
+              onClick={state.restart}
+              className="min-h-[44px] w-full rounded-full bg-black/45 px-4 text-sm text-white backdrop-blur"
+            >
               もう一度はじめから
-            </Button>
-          )}
-        </>
-      )}
-
-      <div className="flex items-center justify-between gap-2 pt-2">
-        <Button variant="quiet" onClick={state.goBack} disabled={!canGoBack}>
-          ← 一つ戻る
-        </Button>
-        <Button variant="quiet" onClick={state.restart}>
-          最初から
-        </Button>
+            </button>
+          </div>
+        )}
       </div>
-
-      <SourceNote verified={scenario.verified} sources={scenario.sources} />
-    </div>
+    </NovelShell>
   );
 }
