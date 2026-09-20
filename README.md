@@ -29,6 +29,8 @@ npm run dev
 
 http://localhost:5173 が開きます。`/api/feedback` は動かないため、課題画面の送信はエラーになります。
 
+同じWi-Fi内のスマホから見たいときは `npm run dev -- --host` で起動し、表示された Network のURLを開きます。
+
 ### AIフィードバックまで含めて確認する
 
 `api/` は Vercel Functions なので、Vercel CLI 経由で起動します。
