@@ -1,0 +1,174 @@
+/* ------------------------------------------------------------------
+   デザイン3案のトークン定義
+
+   html 要素に data-novel-theme="drama" | "anime" | "business" が立つと、
+   その案のトークンで既定値を上書きする（src/theme/themes.ts の ACTIVE_THEME）。
+   /style-lab では比較のため、同じ属性をページ内の div に立てている。
+
+   テーマは「固定の雰囲気」を持つので、テーマブロック内では
+   prefers-color-scheme を見ない（:root[data-novel-theme] の方が
+   :root より詳細度が高いため、ダークモードの定義も上書きされる）。
+
+   ★1案に決めたら、使わないブロックを消してよい。
+------------------------------------------------------------------ */
+
+/* テーマ未指定時の既定値（ノベル演出まわり） */
+:root {
+  --novel-font-body: var(--novel-font-fallback);
+  --novel-font-display: var(--novel-font-fallback);
+
+  --novel-box-bg: rgba(12, 16, 26, 0.86);
+  --novel-box-ink: #f4f6fa;
+  --novel-box-border: transparent;
+  --novel-box-border-width: 0px;
+  --novel-box-radius: 16px;
+  --novel-box-shadow: none;
+
+  --novel-name-bg: transparent;
+  --novel-name-ink: var(--c-accent);
+  --novel-name-radius: 8px;
+
+  --novel-choice-bg: var(--c-surface);
+  --novel-choice-ink: var(--c-text);
+  --novel-choice-border: var(--c-border);
+  --novel-choice-border-width: 1px;
+  --novel-choice-radius: 12px;
+
+  --novel-telop-bg: rgba(0, 0, 0, 0.62);
+  --novel-telop-ink: #ffffff;
+  --novel-telop-radius: 8px;
+
+  --novel-card-bg: var(--c-surface);
+}
+
+/* ---------------- A ドラマ調 ---------------- */
+:root[data-novel-theme='drama'] {
+  --c-bg: #10131a;
+  --c-surface: #191d26;
+  --c-surface-muted: #21262f;
+  --c-border: #333a46;
+  --c-text: #e9ecf2;
+  --c-text-muted: #9aa3b2;
+  --c-accent: #c8a15a;
+  --c-accent-text: #14181f;
+  --c-good: #7fb98f;
+  --c-improve: #d9b06a;
+  --c-danger: #d98a8a;
+  --c-overlay: rgba(8, 10, 15, 0.9);
+  --c-overlay-text: #e9ecf2;
+
+  --novel-font-body: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+  --novel-font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+
+  /* 角を立てて、映画の字幕枠のような硬さを出す */
+  --novel-box-bg: rgba(8, 10, 15, 0.9);
+  --novel-box-ink: #e9ecf2;
+  --novel-box-border: rgba(200, 161, 90, 0.38);
+  --novel-box-border-width: 1px;
+  --novel-box-radius: 3px;
+  --novel-box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+
+  --novel-name-bg: transparent;
+  --novel-name-ink: #c8a15a;
+  --novel-name-radius: 0px;
+
+  --novel-choice-bg: rgba(12, 15, 22, 0.88);
+  --novel-choice-ink: #e9ecf2;
+  --novel-choice-border: rgba(200, 161, 90, 0.35);
+  --novel-choice-border-width: 1px;
+  --novel-choice-radius: 2px;
+
+  --novel-telop-bg: rgba(0, 0, 0, 0.72);
+  --novel-telop-ink: #e9ecf2;
+  --novel-telop-radius: 2px;
+
+  --novel-card-bg: #191d26;
+}
+
+/* ---------------- B お仕事アニメ調 ---------------- */
+:root[data-novel-theme='anime'] {
+  --c-bg: #fff8f0;
+  --c-surface: #ffffff;
+  --c-surface-muted: #fff0e2;
+  --c-border: #ffd9b8;
+  --c-text: #3a2a1f;
+  --c-text-muted: #8a705c;
+  --c-accent: #ff7a59;
+  --c-accent-text: #ffffff;
+  --c-good: #2f9e6e;
+  --c-improve: #d98324;
+  --c-danger: #e05b5b;
+  --c-overlay: rgba(255, 255, 255, 0.95);
+  --c-overlay-text: #3a2a1f;
+
+  --novel-font-body: 'Zen Maru Gothic', 'Hiragino Sans', sans-serif;
+  --novel-font-display: 'Zen Maru Gothic', 'Hiragino Sans', sans-serif;
+
+  /* 太めの枠と大きな角丸で、絵本・マンガのコマに近い印象にする */
+  --novel-box-bg: rgba(255, 255, 255, 0.96);
+  --novel-box-ink: #3a2a1f;
+  --novel-box-border: #ffc79b;
+  --novel-box-border-width: 3px;
+  --novel-box-radius: 22px;
+  --novel-box-shadow: 0 6px 0 rgba(255, 122, 89, 0.22);
+
+  --novel-name-bg: #ff7a59;
+  --novel-name-ink: #ffffff;
+  --novel-name-radius: 999px;
+
+  --novel-choice-bg: #ffffff;
+  --novel-choice-ink: #3a2a1f;
+  --novel-choice-border: #ffb38a;
+  --novel-choice-border-width: 2px;
+  --novel-choice-radius: 999px;
+
+  --novel-telop-bg: #ff7a59;
+  --novel-telop-ink: #ffffff;
+  --novel-telop-radius: 999px;
+
+  --novel-card-bg: #ffffff;
+}
+
+/* ---------------- C ビジネスツール調 ---------------- */
+:root[data-novel-theme='business'] {
+  --c-bg: #f4f6f8;
+  --c-surface: #ffffff;
+  --c-surface-muted: #eceff3;
+  --c-border: #d4dae1;
+  --c-text: #1b2430;
+  --c-text-muted: #5e6b7a;
+  --c-accent: #1f6feb;
+  --c-accent-text: #ffffff;
+  --c-good: #1a7f4b;
+  --c-improve: #9a6200;
+  --c-danger: #c0283a;
+  --c-overlay: rgba(255, 255, 255, 0.97);
+  --c-overlay-text: #1b2430;
+
+  --novel-font-body: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  --novel-font-display: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+
+  /* 業務アプリのパネルに寄せて、影と細い線で情報を区切る */
+  --novel-box-bg: rgba(255, 255, 255, 0.97);
+  --novel-box-ink: #1b2430;
+  --novel-box-border: #d4dae1;
+  --novel-box-border-width: 1px;
+  --novel-box-radius: 8px;
+  --novel-box-shadow: 0 -2px 16px rgba(27, 36, 48, 0.12);
+
+  --novel-name-bg: #eceff3;
+  --novel-name-ink: #1f6feb;
+  --novel-name-radius: 4px;
+
+  --novel-choice-bg: #ffffff;
+  --novel-choice-ink: #1b2430;
+  --novel-choice-border: #d4dae1;
+  --novel-choice-border-width: 1px;
+  --novel-choice-radius: 6px;
+
+  --novel-telop-bg: rgba(27, 36, 48, 0.92);
+  --novel-telop-ink: #ffffff;
+  --novel-telop-radius: 4px;
+
+  --novel-card-bg: #ffffff;
+}
