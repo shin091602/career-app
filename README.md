@@ -5,12 +5,12 @@
 
 | プロトタイプ | 形式 | 職業 | 状態 |
 | --- | --- | --- | --- |
-| `novel-bank` | ノベルゲーム型 | 銀行員 | サンプル入り |
+| `novel-bank` | ショートドラマ型 | 銀行員 | 第1話＋試作エピソード（素材はこれから） |
 | `task-bank` | 業務のミニ版に挑戦 | 銀行員 | サンプル入り |
-| `novel-ad` | ノベルゲーム型 | 広告代理店社員 | 準備中 |
+| `novel-ad` | ショートドラマ型 | 広告代理店社員 | 準備中 |
 | `task-ad` | 業務のミニ版に挑戦 | 広告代理店社員 | 準備中 |
 
-「準備中」は `content/<名前>/` のコンテンツが `null` かどうかで自動判定されます。
+「準備中」は `content/<名前>/` に中身があるかで自動判定されます。
 コンテンツを入れればホームから開けるようになり、共有ファイルを触る必要はありません。
 
 画面はスマホ縦画面（幅375px）を基準に作っています。
@@ -80,18 +80,35 @@ npm run typecheck   # 型チェックのみ
 npm run build       # 型チェック＋本番ビルド
 ```
 
+## 動画素材まわり
+
+ショートドラマ型の素材（動画・静止画）は手作業で生成します。
+
+```bash
+npm run shotlist        # 脚本から docs/shotlist/<エピソードID>.md を生成
+npm run import-assets   # inbox/ に置いた素材を変換して public/assets/ へ
+```
+
+`import-assets` は ffmpeg を使います（`brew install ffmpeg`）。
+画像は WebP、動画は MP4 / H.264（720×1280・CRF26）に変換されます。
+`--mute` を付けると動画の音声を落とします。
+
+**素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できます。**
+
 ## ディレクトリ
 
 ```
-src/engine/novel/   ノベル再生エンジン（共通）
+src/engine/episode/ ショートドラマ再生エンジン（共通）
 src/engine/task/    課題画面・フィードバック表示（共通）
 src/components/     共通UI
 src/pages/          ホーム、各プロトタイプの入口
 src/types/          シナリオ・課題のデータ型
-content/<名前>/     各プロトタイプのコンテンツ
+content/<名前>/     各プロトタイプのコンテンツと制作メモ
 api/feedback.ts     AIフィードバックのAPI
 public/assets/      画像素材（素材IDで参照）
-docs/asset-list.md  必要な素材の一覧
+docs/shotlist/      ショットリスト（自動生成）
+docs/asset-list.md  課題型プロトタイプの素材一覧
+scripts/            ショットリスト生成・素材取り込み
 ```
 
 開発ルールは [CLAUDE.md](./CLAUDE.md) を参照してください。

@@ -13,8 +13,8 @@
 
 | ID | 形式 | 職業 | 内容 |
 | --- | --- | --- | --- |
-| `novel-bank` | ノベルゲーム型 | 銀行員 | 物語を読み進めながら選択して仕事を体験する |
-| `novel-ad` | ノベルゲーム型 | 広告代理店社員 | 同上 |
+| `novel-bank` | ショートドラマ型 | 銀行員 | 動画でドラマが進み、分岐で選択して仕事を体験する |
+| `novel-ad` | ショートドラマ型 | 広告代理店社員 | 同上 |
 | `task-bank` | 業務のミニ版に挑戦 | 銀行員 | 課題に答え、AIから講評をもらう |
 | `task-ad` | 業務のミニ版に挑戦 | 広告代理店社員 | 同上 |
 
@@ -30,7 +30,7 @@
 ## ディレクトリの役割
 
 ```
-src/engine/novel/   ノベル再生エンジン（共通）
+src/engine/episode/ ショートドラマ再生エンジン（共通）
 src/engine/task/    課題画面・フィードバック表示（共通）
 src/components/     共通UI
 src/pages/          ホーム、各プロトタイプの入口ページ
@@ -38,7 +38,9 @@ src/types/          シナリオ・課題のデータ型（プロトタイプ間
 src/lib/            localStorage などの共通処理
 src/theme/          デザイン3案のテーマ定義と、適用するテーマ
 src/prototypes.ts   4つのプロトタイプの一覧（公開状態は持たない）
-content/<名前>/     各プロトタイプのコンテンツ（シナリオ・課題）
+content/<名前>/     各プロトタイプのコンテンツ（エピソード・課題）と制作メモ
+scripts/            ショットリスト生成・素材取り込み
+docs/shotlist/      エピソードごとのショットリスト（自動生成）
 api/feedback.ts     AIフィードバックのAPI
 public/assets/      画像素材（素材IDで参照）
 docs/asset-list.md  必要な素材の一覧
@@ -57,6 +59,7 @@ docs/asset-list.md  必要な素材の一覧
 ### 編集してはいけない範囲
 
 - `src/engine/`
+- `scripts/`
 - `src/types/`
 - `api/`
 - `src/prototypes.ts`
@@ -70,11 +73,14 @@ docs/asset-list.md  必要な素材の一覧
 
 公開状態を管理するファイルはない。**コンテンツの有無から自動で判定される。**
 
-- `content/novel-*/scenario.ts` の `export const scenario` が `null` 以外になれば公開
+- `content/novel-*/episodes.ts` の `export const episodes` に1本でも入れば公開
 - `content/task-*/tasks.ts` の `export const taskSet` が `null` 以外になれば公開
 
-`null` のままなら、ホームでは「準備中」として遷移できない状態で表示される。
-**エクスポート名（`scenario` / `taskSet`）と `| null` を含む型注釈は変更しないこと。**
+空のままなら、ホームでは「準備中」として遷移できない状態で表示される。
+**エクスポート名（`episodes` / `taskSet`）と型注釈は変更しないこと。**
+
+`/novel-<職業>` は `episodes[0]` を再生する。2本目以降は
+`/novel-<職業>?episode=<id>` で開け、ホームの「開発用」に自動で並ぶ。
 共有ファイルを書き換える必要はなく、書き換えるとマージ時に衝突する。
 
 ホームのカードに出る職業名と説明は、コンテンツの `jobTitle` と `description` が使われる
@@ -89,78 +95,123 @@ docs/asset-list.md  必要な素材の一覧
 - 対象読者は中高生。難しい用語には `terms` で短い解説をつける（1〜2文）
 - 仕事の大変さも省かずに描く。ただし特定の職業を貶めない
 
-## 演出の書き方（シナリオでの指定方法）
+## ショットの書き方
 
-演出はすべて `Scene` の**任意フィールド**として書く。書かなければ素の会話場面になる。
-実装済みの見本は `content/novel-bank/scenario.ts` にあるので、まずそれを読むこと。
+ノベル型の体験は**分岐する縦型ショートドラマ**。縦画面いっぱいに動画を再生し、
+セリフは字幕としてアプリ側で重ねる（**動画に文字を焼き込まない**）。
+
+エピソードは `Shot` の並び。実装済みの見本は `content/novel-bank/bank-ep01.ts` にあるので、
+まずそれを読むこと。検証用の短いものは `content/novel-bank/pilot-01.ts`。
 
 | フィールド | 何ができるか | 書き方 |
 | --- | --- | --- |
-| `bgAssetId` | 画面全体の背景 | 素材ID（9:16） |
-| `characters` | 立ち絵を左・中央・右に置く | `[{ assetId, slot: 'left'\|'center'\|'right', speaking?: true }]` |
-| `transition` | 場面に入るときの転換 | `'fade'`（ふわり）／`'blackout'`（暗転を挟む）／`'none'` |
-| `telop` | 時刻と場所のテロップ | `{ time: '9:02', place: '港南支店 融資課' }` |
-| `interrupt` | チャット・メール・電話の割り込み | `{ kind: 'chat'\|'mail'\|'call', from, subject?, body, dismissLabel? }` |
-| `document` | 書類をズームで見せる | `{ title, material, assetId?, autoOpen? }` |
-| `timeLimitSec` ＋ `onTimeout` | 制限時間つきの選択肢 | 下の例を参照 |
-| `sound` | BGM・効果音 | `{ bgm?, se?, stopBgm? }` |
-| `terms` | 難語の解説 | `[{ term, description }]` |
+| `durationSec` | ショットの尺 | 秒。**素材が無くてもこの尺で進む**ので、間の設計はここで決まる |
+| `videoAssetId` | 動画 | 素材ID。無ければ `imageAssetId`、それも無ければ絵コンテ風に落ちる |
+| `imageAssetId` | 動画が無いときの静止画 | 素材ID。ゆっくりズームして見せる |
+| `audioMode` | 音声方式 | `'embedded'`（動画に音声込み）／`'separate'`（無音動画＋アプリ側の音） |
+| `subtitles` | 字幕 | `[{ speaker?, text, atSec, durationSec?, terms? }]` |
+| `telop` | 時刻と場所 | `{ time: '9:02', place: '港南支店 融資課' }` |
+| `interrupt` | チャット・メール・電話の割り込み | `{ kind, from, body, atSec? }`。出ているあいだ再生が止まる |
+| `sound` | BGM・効果音 | `{ bgm?, se?, stopBgm? }`（`audioMode: 'separate'` のとき使う） |
+| `next` | 次のショット | ショットID |
+| `branch` | 分岐 | 下の例を参照。あれば `next` より優先される |
+| `kind` | ショットの種類 | `'story'` / `'reaction'` / `'ending'` / `'debrief'` |
 
 ### 書き方の例
 
 ```ts
 {
-  id: 's05',
-  kind: 'dialogue',
-  speaker: '山田社長',
-  text: '3,000万円の機械を入れたい。\n……なんとか、貸してもらえないかな。',
-  bgAssetId: 'bg-bank-factory',
-  transition: 'blackout',
-  telop: { time: '10:30', place: '山田製作所 応接スペース' },
-  characters: [
-    { assetId: 'char-senior-banker-normal', slot: 'left' },
-    { assetId: 'char-factory-owner-worried', slot: 'right', speaking: true },
+  id: 's05-ask',
+  kind: 'story',
+  durationSec: 10,
+  videoAssetId: 'v-s05-ask',
+  imageAssetId: 'i-s05-ask',
+  subtitles: [
+    { speaker: '山田社長', text: '3,000万、なんとかならないか。', atSec: 3.4 },
   ],
-  timeLimitSec: 12,
-  onTimeout: {
-    label: '答えられず、沈黙が流れた',
-    nextSceneId: 's06-silence',
-    effects: [{ key: 'trust', delta: -1 }],
+  branch: {
+    atSec: 7.5,            // ここで動画が止まり、選択肢が出る
+    timeLimitSec: 10,
+    onTimeout: { label: '答えられなかった', nextShotId: 's06b-silence',
+                 effects: [{ key: 'trust', delta: -1 }] },
+    choices: [
+      { label: 'お任せください', nextShotId: 's06b-silence',
+        effects: [{ key: 'trust', delta: 1 }, { key: 'result', delta: -2 }] },
+      { label: '使いみちを教えて', nextShotId: 's06a-listen',
+        effects: [{ key: 'trust', delta: 2 }, { key: 'result', delta: 2 }] },
+    ],
   },
-  choices: [
-    { label: '詳しく聞く', nextSceneId: 's06-listen', effects: [{ key: 'risk', delta: 2 }] },
-  ],
 }
 ```
 
-### 注意
+### 分岐は「一度分かれて合流する」形にする
 
-- **立ち絵の表情差分は素材IDで分ける。** 型は増やさない
-  （例：`char-senior-banker-normal` / `char-senior-banker-serious`）
-- `speaking: true` は1場面につき1体まで。話している人を手前に出して明るくする
-- `timeLimitSec` を書くときは `onTimeout` も必ず書く。時間切れは
-  「答えないまま時間が過ぎた」という結果として扱い、その場面へ進める
-- `document` の `autoOpen: true` は場面に入った瞬間に開く。
-  `false`（既定）なら「資料を見る」ボタンが出て、利用者が自分で開く
-- **音は既定でミュート。** 利用者が画面右上のボタンをタップするまで鳴らないので、
-  音が鳴ることを前提にした演出（音だけで伝わる情報）は書かない
-- 新しい素材・音が必要になったら、実装より先に `docs/asset-list.md` に追記する
-- 文字送りの途中でもタップで全文が出る。長すぎる本文は場面を分ける
+**必ず合流させること。** 合流しないと、分岐のたびに必要なクリップ数が倍に増える。
+
+- 合流しない場合：分岐2回で終端が4通り。その先のショットを全部作り直すことになる
+- 合流する場合：分岐1回で増えるのは**反応ショット2本だけ**。本筋は1本で済む
+
+手作業で動画を生成する以上、クリップ数がそのまま作業量になる。
+物語の差は「反応ショット」と「ゲージの動き」、そして最後の結末で付ける。
+
+### 守ること
+
+- **選択肢は常に2択。ラベルは10文字以内**（スマホで1行に収めるため）
+- `branch` には `onTimeout` を必ず書く。黙っていた結果もドラマとして描く
+- 選択の直後は `kind: 'reaction'` のショットにする。ここでゲージが動いて手応えが返る
+- **一人称視点。主人公（プレイヤー＝新人）は画面に映さない。** 手元・相手の顔・書類で見せる
+- 1話は**1〜2分**。タイトル画面は作らない（最初のタップで即本編）
+- 字幕は**短く1行**（目安24文字）。長い説明は書かず、場面で見せる
+- 答え合わせ（`kind: 'debrief'`）は先輩キャラの短いショットで行う
+- 結末は複数用意し、`EndingCard` にタイプ診断の名前と説明を書く
+  （結果カードで「エンディング n/m」の回収状況が出る）
+- 答え合わせショットは複数の結末で使い回してよい
+
+これらは `npm run shotlist` が検査する。破っているとショットリストが生成されない。
+
+### 素材の作り方
+
+1. 脚本（`content/<名前>/episodes.ts`）と制作メモ（同 `production.ts`）を書く
+2. `npm run shotlist` → `docs/shotlist/<エピソードID>.md` ができる
+3. 表の「画像生成プロンプト」で静止画を作る（ChatGPT）
+4. その静止画を「動きの指示」で動画にする（Google Flow）
+5. できたファイルを `inbox/` に置いて `npm run import-assets`
+   （WebP / MP4 に変換され、`public/assets/<名前>/` に入る）
+
+**素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できる。**
+先に脚本と尺を固め、素材はあとから差し替えていく。
+
+同じ人物が出るショットでは、`production.ts` の `characters` に設定画の素材IDを書き、
+**見た目を揃える**こと。
+
+### 音声方式の使い分け
+
+| | 使いどころ | 注意 |
+| --- | --- | --- |
+| `'embedded'`（既定） | 人物がしゃべるショット | 口の動きと合うが、差し替えのたびに動画を作り直す |
+| `'separate'` | 風景・手元など、声の無いショット | 無音で取り込み、`sound` でBGMと効果音を足す |
+
+どちらが扱いやすいかは `pilot-01`（試作用エピソード）で確かめられる。
+**音は最初のタップまで鳴らない**（iOSの自動再生制限）。音だけで伝わる情報は書かない。
 
 ### 見た目（テーマ）
 
-配色・フォント・テキストボックス・選択肢ボタンの見た目は
-`src/theme/` のテーマで決まる。3案の比較は `/style-lab` で見られる。
+字幕・選択肢・テロップ・結果カードの見た目は `src/theme/` のテーマで決まる。
+3案の比較は `/style-lab` で見られる。
 **テーマとその適用（`ACTIVE_THEME`）は共通基盤なので、worktree側では変更しない。**
+
 
 ## 素材のルール
 
-- 画像・動画は**素材ID**で参照し、実ファイルは `public/assets/<プロトタイプ名>/<素材ID>.<拡張子>` に置く
-- 新しい素材が必要になったら `docs/asset-list.md` に、
-  **素材ID / 用途 / 推奨サイズ / 画像生成用プロンプト**を追記する
-  - 背景は 9:16（目安 1080×1920）
-  - 人物は透過PNG（目安 800×1400）
-- 素材は開発者が手作業で生成する。**実装はダミー表示（色付き矩形＋素材ID）のまま進める**
+- 画像・動画・音は**素材ID**で参照し、実ファイルは
+  `public/assets/<プロトタイプ名>/<素材ID>.<拡張子>` に置く
+  （動画 `.mp4` ／ 静止画 `.webp` ／ 音 `.mp3`。変換は `npm run import-assets` がやる）
+- 縦 9:16。動画は 720×1280 目安、静止画は長辺1080目安
+- **ノベル型の素材は `content/<名前>/production.ts` に書き、`npm run shotlist` で一覧化する。**
+  `docs/asset-list.md` は課題型プロトタイプ用に残している
+- 素材は開発者が手作業で生成する。**実装は代替表示（絵コンテ風）のまま進める**
+- 実在の企業名・ロゴ・実在人物を思わせるものを出さない
+- 画面に文字を焼き込まない（字幕はアプリ側で重ねる）
 
 ## APIのルール
 
@@ -173,4 +224,5 @@ docs/asset-list.md  必要な素材の一覧
 
 - こまめにコミットする。コミットメッセージは**日本語**で簡潔に書く
 - 区切りごとに `npm run build` が通ることを確認する
+- エピソードを触ったら `npm run shotlist` を実行し、検査に通ることを確認する
 - 画面はスマホ縦画面（幅375px）で確認する

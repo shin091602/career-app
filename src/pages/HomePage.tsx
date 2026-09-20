@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AppShell, Badge, Card, PasscodeField } from '../components';
 import { descriptionOf, isReady, jobTitleOf, PROTOTYPES } from '../prototypes';
+import { episodes as bankEpisodes } from '../../content/novel-bank/episodes';
 
 /**
  * 4つのプロトタイプへの入口。
@@ -50,9 +51,21 @@ export function HomePage() {
           実在のものとは関係ありません。
         </p>
 
-        <Link to="/style-lab" className="block text-xs text-ink-muted underline">
-          開発用：デザイン3案を見比べる
-        </Link>
+        <section className="space-y-1 border-t border-line pt-3">
+          <h2 className="text-xs font-bold text-ink-muted">開発用</h2>
+          <Link to="/style-lab" className="block text-xs text-ink-muted underline">
+            デザイン3案を見比べる
+          </Link>
+          {bankEpisodes.slice(1).map((episode) => (
+            <Link
+              key={episode.id}
+              to={`/novel-bank?episode=${episode.id}`}
+              className="block text-xs text-ink-muted underline"
+            >
+              {episode.title}
+            </Link>
+          ))}
+        </section>
       </div>
     </AppShell>
   );
