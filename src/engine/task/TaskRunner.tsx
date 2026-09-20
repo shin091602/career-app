@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { PrototypeId, TaskSet } from '../../types';
-import { Badge, Button, ErrorBanner, SourceNote, Spinner, TermList } from '../../components';
+import {
+  Badge,
+  Button,
+  ErrorBanner,
+  MaterialView,
+  SourceNote,
+  Spinner,
+  TermList,
+} from '../../components';
 import { usePasscode } from '../../lib/usePasscode';
 import { usePersistentState } from '../../lib/usePersistentState';
-import { MaterialView } from './MaterialView';
 import { AnswerInput } from './AnswerInput';
 import { FeedbackView } from './FeedbackView';
 import { useFeedback } from './useFeedback';

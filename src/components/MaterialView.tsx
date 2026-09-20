@@ -1,7 +1,10 @@
-import type { Material } from '../../types';
-import { Card } from '../../components';
+import type { Material } from '../types';
+import { Card } from './Card';
 
-/** 課題に添える資料の表示。表はスマホでも崩れないよう横スクロールにする */
+/**
+ * 表やテキストの資料の表示。表はスマホでも崩れないよう横スクロールにする。
+ * 課題画面の資料と、ノベルの書類ズームの両方で使う。
+ */
 export function MaterialView({ material }: { material: Material }) {
   if (material.kind === 'table') {
     return (

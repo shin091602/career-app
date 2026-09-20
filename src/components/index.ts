@@ -5,6 +5,7 @@ export { Badge } from './Badge';
 export { Button } from './Button';
 export { Card } from './Card';
 export { ErrorBanner } from './ErrorBanner';
+export { MaterialView } from './MaterialView';
 export { NovelShell } from './NovelShell';
 export { PasscodeField } from './PasscodeField';
 export { SourceNote } from './SourceNote';

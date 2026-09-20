@@ -1,6 +1,25 @@
-import { useCallback, useMemo } from 'react';
-import type { Choice, ParamEffect, PrototypeId, Scenario, Scene } from '../../types';
+import { useCallback, useEffect, useMemo } from 'react';
+import type {
+  Choice,
+  ParamEffect,
+  PrototypeId,
+  Scenario,
+  Scene,
+  TimeoutOutcome,
+} from '../../types';
 import { usePersistentState } from '../../lib/usePersistentState';
+
+/** バックログ（これまでの流れ）の1行 */
+export interface BacklogEntry {
+  sceneId: string;
+  /** line = セリフ・地の文 / choice = 自分が選んだこと */
+  kind: 'line' | 'choice';
+  speaker?: string;
+  text: string;
+}
+
+/** バックログに残す最大件数（localStorage を膨らませないため） */
+const BACKLOG_LIMIT = 80;
 
 /** localStorage に保存する進行状況 */
 export interface NovelProgress {
@@ -17,6 +36,8 @@ export interface NovelProgress {
    * -1: まだエンディング本文を見ている / 0以上: debriefSceneIds のその位置
    */
   debriefIndex: number;
+  /** これまでの流れ */
+  backlog: BacklogEntry[];
 }
 
 function initialProgress(scenario: Scenario): NovelProgress {
@@ -28,6 +49,7 @@ function initialProgress(scenario: Scenario): NovelProgress {
     params,
     picked: {},
     debriefIndex: -1,
+    backlog: [],
   };
 }
 
@@ -43,6 +65,10 @@ function applyEffects(
   return next;
 }
 
+function appendBacklog(backlog: BacklogEntry[], entry: BacklogEntry): BacklogEntry[] {
+  return [...backlog, entry].slice(-BACKLOG_LIMIT);
+}
+
 export interface NovelState {
   scene: Scene;
   progress: NovelProgress;
@@ -54,20 +80,25 @@ export interface NovelState {
   canAdvance: boolean;
   advance: () => void;
   pick: (choice: Choice) => void;
+  /** 制限時間切れ。シナリオの onTimeout に従って進む */
+  timeout: (outcome: TimeoutOutcome) => void;
   goBack: () => void;
   restart: () => void;
 }
 
 /**
- * ノベルの再生状態。場面の遷移・パラメータ加算・答え合わせの進行を一手に扱う。
+ * ノベルの再生状態。場面の遷移・パラメータ加算・答え合わせの進行・バックログを一手に扱う。
  * 進行状況はプロトタイプごとに localStorage へ保存し、再訪時に続きから再開する。
  */
 export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): NovelState {
   const fallback = useMemo(() => initialProgress(scenario), [scenario]);
-  const [progress, setProgress, reset] = usePersistentState<NovelProgress>(
+  const [rawProgress, setProgress, reset] = usePersistentState<NovelProgress>(
     `novel:${prototypeId}:progress`,
     fallback,
   );
+
+  // 以前の版で保存された進行状況には backlog が無い
+  const progress: NovelProgress = { ...rawProgress, backlog: rawProgress.backlog ?? [] };
 
   const sceneMap = useMemo(() => {
     const map = new Map<string, Scene>();
@@ -80,6 +111,24 @@ export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): Nov
   const scene = sceneMap.get(currentId);
   if (!scene) throw new Error(`場面が見つかりません: ${currentId}`);
 
+  // 表示した場面をバックログに積む（同じ場面を続けて積まない）
+  useEffect(() => {
+    setProgress((prev) => {
+      const backlog = prev.backlog ?? [];
+      const last = backlog[backlog.length - 1];
+      if (last && last.kind === 'line' && last.sceneId === currentId) return prev;
+      return {
+        ...prev,
+        backlog: appendBacklog(backlog, {
+          sceneId: currentId,
+          kind: 'line',
+          speaker: scene.speaker,
+          text: scene.text,
+        }),
+      };
+    });
+  }, [currentId, scene.speaker, scene.text, setProgress]);
+
   const ending = useMemo(
     () => scenario.endings.find((candidate) => candidate.sceneId === scene.id),
     [scenario, scene.id],
@@ -87,7 +136,9 @@ export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): Nov
 
   const debriefIds = ending?.debriefSceneIds ?? [];
   const debriefPosition =
-    ending && progress.debriefIndex >= 0 ? Math.min(progress.debriefIndex, debriefIds.length - 1) : null;
+    ending && progress.debriefIndex >= 0
+      ? Math.min(progress.debriefIndex, debriefIds.length - 1)
+      : null;
 
   const canAdvance = ending
     ? progress.debriefIndex + 1 < debriefIds.length
@@ -126,6 +177,30 @@ export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): Nov
         params: applyEffects(prev.params, choice.effects),
         picked: { ...prev.picked, [prev.sceneId]: choice.label },
         debriefIndex: -1,
+        backlog: appendBacklog(prev.backlog ?? [], {
+          sceneId: prev.sceneId,
+          kind: 'choice',
+          text: choice.label,
+        }),
+      }));
+    },
+    [setProgress],
+  );
+
+  const timeout = useCallback(
+    (outcome: TimeoutOutcome) => {
+      setProgress((prev) => ({
+        ...prev,
+        sceneId: outcome.nextSceneId,
+        history: [...prev.history, prev.sceneId],
+        params: applyEffects(prev.params, outcome.effects),
+        picked: { ...prev.picked, [prev.sceneId]: outcome.label },
+        debriefIndex: -1,
+        backlog: appendBacklog(prev.backlog ?? [], {
+          sceneId: prev.sceneId,
+          kind: 'choice',
+          text: outcome.label,
+        }),
       }));
     },
     [setProgress],
@@ -148,10 +223,13 @@ export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): Nov
       let params = prev.params;
       const picked = { ...prev.picked };
       if (previousScene?.choices && pickedLabel) {
-        const undo = previousScene.choices.find((choice) => choice.label === pickedLabel);
+        // 時間切れで進んだ場合は onTimeout の効果を取り消す
+        const undone =
+          previousScene.choices.find((choice) => choice.label === pickedLabel) ??
+          (previousScene.onTimeout?.label === pickedLabel ? previousScene.onTimeout : undefined);
         params = applyEffects(
           params,
-          undo?.effects?.map((effect) => ({ key: effect.key, delta: -effect.delta })),
+          undone?.effects?.map((effect) => ({ key: effect.key, delta: -effect.delta })),
         );
         delete picked[previousId];
       }
@@ -168,6 +246,7 @@ export function useNovelState(scenario: Scenario, prototypeId: PrototypeId): Nov
     canAdvance,
     advance,
     pick,
+    timeout,
     goBack,
     restart: reset,
   };

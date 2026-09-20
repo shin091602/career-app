@@ -5,4 +5,4 @@
  */
 export { NovelPlayer } from './NovelPlayer';
 export type { NovelPlayerProps } from './NovelPlayer';
-export type { NovelProgress } from './useNovelState';
+export type { BacklogEntry, NovelProgress } from './useNovelState';
