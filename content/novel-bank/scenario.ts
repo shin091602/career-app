@@ -36,7 +36,7 @@ export const scenario: Scenario | null = {
       speaker: '先輩行員',
       text: '今日は一緒に山田製作所へ行こう。\n社長から「新しい機械を入れたい」って電話があってね。\n\n……こういう相談、うちの仕事のど真ん中だよ。',
       bgAssetId: 'bg-bank-office',
-      charAssetId: 'char-senior-banker',
+      characters: [{ assetId: 'char-senior-banker', slot: 'center', speaking: true }],
       terms: [
         {
           term: '法人営業',
@@ -51,7 +51,7 @@ export const scenario: Scenario | null = {
       speaker: '山田社長',
       text: '注文が増えてきてね。今の機械じゃ追いつかないんだ。\n3,000万円の機械を入れたい。\n\n……なんとか、貸してもらえないかな。',
       bgAssetId: 'bg-bank-factory',
-      charAssetId: 'char-factory-owner',
+      characters: [{ assetId: 'char-factory-owner', slot: 'center', speaking: true }],
       terms: [
         {
           term: '融資',
@@ -88,7 +88,7 @@ export const scenario: Scenario | null = {
       speaker: '山田社長',
       text: '……よく聞いてくれたね。\n注文元は3社。うち1社で売上の7割だ。\n\n先輩行員：「そこが大事なところです。持ち帰って、きちんと検討させてください」',
       bgAssetId: 'bg-bank-factory',
-      charAssetId: 'char-factory-owner',
+      characters: [{ assetId: 'char-factory-owner', slot: 'center', speaking: true }],
       terms: [
         {
           term: '稟議（りんぎ）',
@@ -104,7 +104,7 @@ export const scenario: Scenario | null = {
       speaker: '先輩行員',
       text: '（帰り道）\nその場で答えを出したい気持ちは分かる。\nでも、決めるのは担当者ひとりじゃないんだ。\n\n何を確かめれば決められるのか──そこから逆算しよう。',
       bgAssetId: 'bg-bank-office',
-      charAssetId: 'char-senior-banker',
+      characters: [{ assetId: 'char-senior-banker', slot: 'center', speaking: true }],
       next: 'ending-01',
     },
     {
@@ -113,7 +113,7 @@ export const scenario: Scenario | null = {
       speaker: '先輩行員',
       text: 'おつかれさま。\n今日の訪問で分かったことを、明日いちばんに整理しよう。\n\nこの仕事は、その場の返事より「持ち帰ったあと」で差がつく。',
       bgAssetId: 'bg-bank-office',
-      charAssetId: 'char-senior-banker',
+      characters: [{ assetId: 'char-senior-banker', slot: 'center', speaking: true }],
     },
     {
       id: 'debrief-01',

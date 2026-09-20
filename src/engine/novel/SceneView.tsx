@@ -27,14 +27,15 @@ export function SceneView({ scene, prototypeId, onTapText }: SceneViewProps) {
           <div className="absolute inset-0 bg-surface-muted" />
         )}
 
-        {scene.charAssetId && (
+        {(scene.characters ?? []).map((character) => (
           <AssetImage
-            assetId={scene.charAssetId}
+            key={`${character.slot}-${character.assetId}`}
+            assetId={character.assetId}
             kind="char"
             prototypeId={prototypeId}
             className="absolute bottom-0 left-1/2 h-[68%] w-[52%] -translate-x-1/2 rounded-t-2xl"
           />
-        )}
+        ))}
       </div>
 
       <div

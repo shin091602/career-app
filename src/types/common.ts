@@ -47,3 +47,16 @@ export interface Term {
   /** 1〜2文の短い解説 */
   description: string;
 }
+
+/** 表やテキストの資料。課題の資料としても、ノベルの書類ズームとしても使う */
+export type Material =
+  | { kind: 'text'; id: string; title: string; body: string }
+  | {
+      kind: 'table';
+      id: string;
+      title: string;
+      headers: string[];
+      rows: string[][];
+      caption?: string;
+    }
+  | { kind: 'note'; id: string; title: string; body: string };

@@ -2,20 +2,9 @@
  * 「業務のミニ版に挑戦」型プロトタイプ（task-bank / task-ad）のデータ型。
  * worktree側のエージェントは編集せず、必要な変更を報告すること。
  */
-import type { Term, VerifiableMeta } from './common';
+import type { Material, Term, VerifiableMeta } from './common';
 
-/** 課題に添える資料 */
-export type Material =
-  | { kind: 'text'; id: string; title: string; body: string }
-  | {
-      kind: 'table';
-      id: string;
-      title: string;
-      headers: string[];
-      rows: string[][];
-      caption?: string;
-    }
-  | { kind: 'note'; id: string; title: string; body: string };
+// 課題に添える資料の型（Material）は、ノベルの書類ズームでも使うため common.ts にある
 
 export interface ChoiceOption {
   id: string;
