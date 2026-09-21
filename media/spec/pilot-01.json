@@ -1,0 +1,145 @@
+{
+  "episodeId": "pilot-01",
+  "prototypeId": "novel-bank",
+  "title": "【試作】素材の作り方の検証",
+  "audioMode": "embedded",
+  "characters": [
+    {
+      "id": "ref-saeki",
+      "name": "佐伯（先輩行員・30代半ば）",
+      "appearance": "30代半ばの日本人男性。細身、短い黒髪。グレーのスーツに落ち着いた青のネクタイ。面倒見のよさが表情に出ている。",
+      "expressions": [
+        "normal",
+        "smile"
+      ]
+    },
+    {
+      "id": "ref-yamada",
+      "name": "山田社長（60代半ば・町工場の社長）",
+      "appearance": "60代半ばの日本人男性。短く刈った白髪、日に焼けた顔、太い指。ベージュの作業着を着ている。",
+      "expressions": [
+        "normal",
+        "plea",
+        "think"
+      ]
+    },
+    {
+      "id": "ref-kacho",
+      "name": "融資課長（40代後半）",
+      "appearance": "40代後半の日本人男性。がっしりした体格、七三に分けた黒髪、銀縁の眼鏡。濃紺のスーツ。感情を出さない。",
+      "expressions": [
+        "normal",
+        "stern"
+      ]
+    }
+  ],
+  "places": [
+    {
+      "id": "pl-branch",
+      "name": "港南支店 融資課フロア",
+      "prompt": "日本の地方銀行の支店、法人営業のデスクが並ぶフロア。朝の柔らかい光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-reception",
+      "name": "港南支店 応接室",
+      "prompt": "日本の地方銀行支店の応接室。低いテーブルと布張りのソファ、壁際にパーテーション。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-factory",
+      "name": "山田製作所 応接スペース",
+      "prompt": "古い町工場の応接スペース。使い込まれた机とパイプ椅子、奥の窓から作業場が見える。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-car",
+      "name": "移動中の車内",
+      "prompt": "車の助手席から見た窓の外。住宅と小さな工場が混じる郊外の景色。昼の光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-lounge",
+      "name": "港南支店 休憩スペース",
+      "prompt": "銀行の支店の休憩スペース。自販機と小さなテーブル、夕方の斜めの光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    }
+  ],
+  "shots": [
+    {
+      "id": "p1",
+      "kind": "story",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-p1-order",
+      "imageAssetId": "i-p1-order",
+      "placeId": "pl-reception",
+      "characterIds": [
+        "ref-kacho"
+      ],
+      "imagePrompt": "日本の地方銀行支店の応接室。濃紺のスーツを着た40代後半の男性が歩いてきて、ファイルを机に置こうとしている。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "課長が数歩こちらへ歩いてきて、手に持ったファイルを机に置き、こちらを見て話す。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 座っているこちらを課長が見下ろす角度。音声込みで書き出す（audioMode: embedded の検証）。",
+      "soundNote": "革靴の足音と、紙の束が机に当たる音。",
+      "dialogue": [
+        {
+          "speaker": "融資課長",
+          "text": "新人、この融資は君が判断しろ。"
+        },
+        {
+          "speaker": "融資課長",
+          "text": "明日の朝までだ。"
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "kind": "story",
+      "durationSec": 8,
+      "veoSeconds": 8,
+      "audioMode": "embedded",
+      "videoAssetId": "v-p2-plea",
+      "imageAssetId": "i-p2-plea",
+      "placeId": "pl-reception",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "日本の地方銀行支店の応接室。ベージュの作業着を着た60代半ばの男性が机越しに深く頭を下げている。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が頭を下げたまま数秒静止し、ゆっくり顔を上げてこちらを見る。言い終えたあとは動きを止める。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 分岐の「間」を作るため、最後の2秒は静止。音声込み。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "どうか……"
+        },
+        {
+          "speaker": "山田社長",
+          "text": "この工場を守りたいんです。"
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "kind": "ending",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "separate",
+      "videoAssetId": "v-p3-proof",
+      "imageAssetId": "i-p3-proof",
+      "placeId": "pl-reception",
+      "characterIds": [
+        "ref-kacho"
+      ],
+      "imagePrompt": "日本の地方銀行支店の応接室。濃紺のスーツの40代後半の男性が目を細めてこちらを見ている。夕方の斜めの光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "課長が目を細め、わずかに身を乗り出してこちらを見つめる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 **無音で書き出す**（audioMode: separate の検証。声と音はアプリ側）。",
+      "soundNote": "静かな室内の空気だけ。声は入れない。",
+      "dialogue": [
+        {
+          "speaker": "融資課長",
+          "text": "根拠は？"
+        },
+        {
+          "speaker": "融資課長",
+          "text": "数字で説明できるか。"
+        }
+      ]
+    }
+  ]
+}

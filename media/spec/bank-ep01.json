@@ -1,0 +1,503 @@
+{
+  "episodeId": "bank-ep01",
+  "prototypeId": "novel-bank",
+  "title": "第1話 3,000万円の相談",
+  "audioMode": "embedded",
+  "characters": [
+    {
+      "id": "ref-saeki",
+      "name": "佐伯（先輩行員・30代半ば）",
+      "appearance": "30代半ばの日本人男性。細身、短い黒髪。グレーのスーツに落ち着いた青のネクタイ。面倒見のよさが表情に出ている。",
+      "expressions": [
+        "normal",
+        "smile"
+      ]
+    },
+    {
+      "id": "ref-yamada",
+      "name": "山田社長（60代半ば・町工場の社長）",
+      "appearance": "60代半ばの日本人男性。短く刈った白髪、日に焼けた顔、太い指。ベージュの作業着を着ている。",
+      "expressions": [
+        "normal",
+        "plea",
+        "think"
+      ]
+    },
+    {
+      "id": "ref-kacho",
+      "name": "融資課長（40代後半）",
+      "appearance": "40代後半の日本人男性。がっしりした体格、七三に分けた黒髪、銀縁の眼鏡。濃紺のスーツ。感情を出さない。",
+      "expressions": [
+        "normal",
+        "stern"
+      ]
+    }
+  ],
+  "places": [
+    {
+      "id": "pl-branch",
+      "name": "港南支店 融資課フロア",
+      "prompt": "日本の地方銀行の支店、法人営業のデスクが並ぶフロア。朝の柔らかい光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-reception",
+      "name": "港南支店 応接室",
+      "prompt": "日本の地方銀行支店の応接室。低いテーブルと布張りのソファ、壁際にパーテーション。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-factory",
+      "name": "山田製作所 応接スペース",
+      "prompt": "古い町工場の応接スペース。使い込まれた机とパイプ椅子、奥の窓から作業場が見える。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-car",
+      "name": "移動中の車内",
+      "prompt": "車の助手席から見た窓の外。住宅と小さな工場が混じる郊外の景色。昼の光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    },
+    {
+      "id": "pl-lounge",
+      "name": "港南支店 休憩スペース",
+      "prompt": "銀行の支店の休憩スペース。自販機と小さなテーブル、夕方の斜めの光。人物は映さない。日本のアニメ調、縦9:16、文字やロゴは入れない。"
+    }
+  ],
+  "shots": [
+    {
+      "id": "s01-hook",
+      "kind": "story",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s01-hook",
+      "imageAssetId": "i-s01-hook",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長が、机越しにこちらへ身を乗り出して頼み込んでいる。逆光ぎみの昼の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長がわずかに身を乗り出し、目線がこちらに定まる。カメラはほぼ固定で微かに呼吸。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 冒頭3秒で引き込むため、最初のコマから社長の顔が画面を占める。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "なんとか、貸してもらえないかな。"
+        }
+      ]
+    },
+    {
+      "id": "s02-morning",
+      "kind": "story",
+      "durationSec": 8,
+      "veoSeconds": 8,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s02-morning",
+      "imageAssetId": "i-s02-morning",
+      "placeId": "pl-branch",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "銀行の支店の法人営業フロア。30代半ばのスーツの男性行員が、書類を手にこちらを見て話しかけている。朝の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が書類を手に取りながら話す。背景で同僚がゆっくり歩く。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 自分の席から先輩を見上げる角度。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "今日、山田製作所へ行く。"
+        },
+        {
+          "speaker": "佐伯",
+          "text": "新しい機械を入れたいそうだ。"
+        },
+        {
+          "speaker": "佐伯",
+          "text": "お前が主担当な。"
+        }
+      ]
+    },
+    {
+      "id": "s03-chat",
+      "kind": "story",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s03-desk",
+      "imageAssetId": "i-s03-desk",
+      "placeId": "pl-branch",
+      "characterIds": [],
+      "imagePrompt": "デスクの上の決算資料。数字の並んだ表とボールペン、スマートフォンが置かれている。手元だけが画面下に少し入る。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "手が資料のページをめくり、指が数字の行をなぞる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 真上からやや斜めに見下ろす手元のカット。",
+      "soundNote": "フロアのざわめきと、スマートフォンの短い通知音。",
+      "dialogue": []
+    },
+    {
+      "id": "s04-move",
+      "kind": "story",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s04-move",
+      "imageAssetId": "i-s04-move",
+      "placeId": "pl-car",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "車の助手席から見た窓の外。住宅と小さな工場が混じる郊外の景色が流れていく。昼の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "景色が横に流れ、最後に工場の門が近づいて止まる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 移動と場面転換を1カットで見せる。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "数字は頭に入ったな。"
+        }
+      ]
+    },
+    {
+      "id": "s05-ask",
+      "kind": "story",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s05-ask",
+      "imageAssetId": "i-s05-ask",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。机を挟んで60代の男性社長が座り、真剣な表情でこちらに話している。奥の窓から作業場が見える。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が言葉を選びながら話し、最後に机の上で手を組む。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 依頼の中身を聞かせるカット。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "注文が増えてね。機械が追いつかない。"
+        },
+        {
+          "speaker": "山田社長",
+          "text": "3,000万、なんとかならないか。"
+        }
+      ]
+    },
+    {
+      "id": "s05b-wait",
+      "kind": "story",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s05b-wait",
+      "imageAssetId": "i-s05b-wait",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長が口を閉じ、こちらの返事をまっすぐ待っている。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が口を閉じ、まばたきをしてこちらを見つめたまま動きを止める。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 選択肢が出る「間」。最後の2秒はほぼ静止させる。",
+      "dialogue": []
+    },
+    {
+      "id": "s06a-listen",
+      "kind": "reaction",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s06a-listen",
+      "imageAssetId": "i-s06a-listen",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長の表情がふっとゆるみ、安心したように話し出す。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "肩の力が抜け、少し前に乗り出して話し始める。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 選んだ結果が伝わるよう、表情の変化を大きめに。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "よく聞いてくれたね。"
+        },
+        {
+          "speaker": "山田社長",
+          "text": "注文元は3社。うち1社で7割だ。"
+        }
+      ]
+    },
+    {
+      "id": "s06b-silence",
+      "kind": "reaction",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s06b-silence",
+      "imageAssetId": "i-s06b-silence",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-saeki",
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。スーツの男性行員が横から口を開き、作業着の社長がそちらへ視線を移す。気まずさの残る空気。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が半歩前に出て話し、社長の視線が佐伯へ移る。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 自分が答えられなかったことが伝わる構図。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "——社長、少しお時間を。"
+        }
+      ]
+    },
+    {
+      "id": "s07-turn",
+      "kind": "story",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s07-turn",
+      "imageAssetId": "i-s07-turn",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長が視線を落とし、言いにくそうに話し始める。机の上には湯呑み。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が一度言葉を切り、意を決して顔を上げる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 話が動く場面なので、やや寄りで。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "実は、その1社から話が来ていて。"
+        },
+        {
+          "speaker": "山田社長",
+          "text": "来期は量を減らすかもしれない、と。"
+        }
+      ]
+    },
+    {
+      "id": "s07b-weight",
+      "kind": "story",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s07b-weight",
+      "imageAssetId": "i-s07b-weight",
+      "placeId": "pl-factory",
+      "characterIds": [],
+      "imagePrompt": "町工場の応接スペースの机。湯呑みと、めくられたままの決算資料。奥に作業着の社長の胸元がぼやけて見える。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "カメラがゆっくり手元へ落ちる。湯呑みの湯気が揺れる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 聞いてしまった事実の重さを、間で見せる。",
+      "soundNote": "工場の低い機械音だけが続く。",
+      "dialogue": []
+    },
+    {
+      "id": "s08-decide",
+      "kind": "story",
+      "durationSec": 8,
+      "veoSeconds": 8,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s08-decide",
+      "imageAssetId": "i-s08-decide",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "町工場の応接スペースで、スーツの男性行員が横からこちらを見ている。何も言わず、判断を委ねる目。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯がこちらへ視線を送り、わずかにうなずいて待つ。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 2回目の分岐。沈黙の圧を作る。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "（お前が決めろ、という目）"
+        }
+      ]
+    },
+    {
+      "id": "s09a-carry",
+      "kind": "reaction",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s09a-carry",
+      "imageAssetId": "i-s09a-carry",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長が小さく頭を下げ、感謝の表情を見せる。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が軽く頭を下げ、ゆっくり顔を上げる。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "……ありがとう。待つよ。"
+        }
+      ]
+    },
+    {
+      "id": "s09b-hold",
+      "kind": "reaction",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-s09b-hold",
+      "imageAssetId": "i-s09b-hold",
+      "placeId": "pl-factory",
+      "characterIds": [
+        "ref-yamada"
+      ],
+      "imagePrompt": "町工場の応接スペース。60代の男性社長が腕を組み、考え込む表情になる。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "社長が腕を組み、視線を机に落として考える。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。",
+      "dialogue": [
+        {
+          "speaker": "山田社長",
+          "text": "……そうか。考えてみる。"
+        }
+      ]
+    },
+    {
+      "id": "e01-carry",
+      "kind": "ending",
+      "durationSec": 8,
+      "veoSeconds": 8,
+      "audioMode": "embedded",
+      "videoAssetId": "v-e01-carry",
+      "imageAssetId": "i-e01-carry",
+      "placeId": "pl-branch",
+      "characterIds": [
+        "ref-kacho"
+      ],
+      "imagePrompt": "夕方の銀行支店。濃紺のスーツの40代後半の男性がデスク越しにこちらを見上げて話している。窓の外は夕焼け。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "課長が書類から顔を上げ、最後の一言で目を細める。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 次回への引きなので、最後のコマで止める。",
+      "dialogue": [
+        {
+          "speaker": "融資課長",
+          "text": "聞いてきたことを、一枚にまとめて。"
+        },
+        {
+          "speaker": "融資課長",
+          "text": "——その7割の話、本当か？"
+        }
+      ]
+    },
+    {
+      "id": "e02-propose",
+      "kind": "ending",
+      "durationSec": 8,
+      "veoSeconds": 8,
+      "audioMode": "embedded",
+      "videoAssetId": "v-e02-propose",
+      "imageAssetId": "i-e02-propose",
+      "placeId": "pl-branch",
+      "characterIds": [
+        "ref-kacho"
+      ],
+      "imagePrompt": "夕方の銀行支店。濃紺のスーツの40代後半の男性がペンを置き、こちらへ体を向けて問いかけている。窓の外は夕焼け。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "課長がペンを置き、こちらへ体を向けて問いかける。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 次回への引きなので、最後のコマで止める。",
+      "dialogue": [
+        {
+          "speaker": "融資課長",
+          "text": "金額を下げる提案をしたのか。"
+        },
+        {
+          "speaker": "融資課長",
+          "text": "——それ、社長は納得してたか？"
+        }
+      ]
+    },
+    {
+      "id": "d01-decide",
+      "kind": "debrief",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-d01-decide",
+      "imageAssetId": "i-d01-decide",
+      "placeId": "pl-lounge",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "銀行支店の休憩スペース。30代半ばのスーツの男性行員が壁にもたれ、穏やかにこちらへ説明している。夕方の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が身振りを交えて落ち着いて話す。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 答え合わせ。説明口調になりすぎないよう、表情は柔らかく。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "融資は、担当がその場で決めない。"
+        },
+        {
+          "speaker": "佐伯",
+          "text": "資料をそろえて、社内で検討するんだ。"
+        }
+      ]
+    },
+    {
+      "id": "d01b-visit",
+      "kind": "debrief",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-d01b-visit",
+      "imageAssetId": "i-d01b-visit",
+      "placeId": "pl-lounge",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "銀行支店の休憩スペース。30代半ばのスーツの男性行員が軽く笑って言い添えている。夕方の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が肩をすくめて笑い、最後に真顔に戻る。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 答え合わせの締め。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "訪問の仕事は「聞き出すこと」だよ。"
+        }
+      ]
+    },
+    {
+      "id": "d02-concentration",
+      "kind": "debrief",
+      "durationSec": 6,
+      "veoSeconds": 6,
+      "audioMode": "embedded",
+      "videoAssetId": "v-d02-concentration",
+      "imageAssetId": "i-d02-concentration",
+      "placeId": "pl-lounge",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "銀行支店の休憩スペース。30代半ばのスーツの男性行員が指を3本立てて説明している。夕方の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が指を立てて数え、最後に手を下ろす。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 答え合わせ2本目。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "1社で7割。良い話にも危ない話にもなる。"
+        },
+        {
+          "speaker": "佐伯",
+          "text": "止まったとき、一気に苦しくなるからね。"
+        }
+      ]
+    },
+    {
+      "id": "d02b-origin",
+      "kind": "debrief",
+      "durationSec": 4,
+      "veoSeconds": 4,
+      "audioMode": "embedded",
+      "videoAssetId": "v-d02b-origin",
+      "imageAssetId": "i-d02b-origin",
+      "placeId": "pl-lounge",
+      "characterIds": [
+        "ref-saeki"
+      ],
+      "imagePrompt": "銀行支店の休憩スペース。30代半ばのスーツの男性行員が資料を指さし、こちらへ視線を向ける。夕方の光。日本のアニメ調、縦9:16、文字やロゴは入れない。",
+      "motionPrompt": "佐伯が資料を指でとんとんと叩き、こちらを見る。",
+      "cameraNote": "一人称視点。主人公は映さず、カメラが主人公の目線そのものになる。 答え合わせ2本目の締め。",
+      "dialogue": [
+        {
+          "speaker": "佐伯",
+          "text": "数字は「どこから来たか」まで見る。"
+        }
+      ]
+    }
+  ]
+}

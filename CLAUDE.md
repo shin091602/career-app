@@ -40,7 +40,12 @@ src/theme/          デザイン3案のテーマ定義と、適用するテー�
 src/prototypes.ts   4つのプロトタイプの一覧（公開状態は持たない）
 content/<名前>/     各プロトタイプのコンテンツ（エピソード・課題）と制作メモ
 scripts/            ショットリスト生成・素材取り込み
+scripts/media/      脚本から動画までの生成パイプライン（Gemini / Veo）
 docs/shotlist/      エピソードごとのショットリスト（自動生成）
+media/spec/         機械可読なショットリスト（自動生成）
+media/takes/        採用テイクの指定
+media/manifest/     生成ログ（使ったプロンプト・モデル・推定費用）
+media/work/         生成途中の素材とテイク（gitignore）
 api/feedback.ts     AIフィードバックのAPI
 public/assets/      画像素材（素材IDで参照）
 docs/asset-list.md  必要な素材の一覧
@@ -59,7 +64,7 @@ docs/asset-list.md  必要な素材の一覧
 ### 編集してはいけない範囲
 
 - `src/engine/`
-- `scripts/`
+- `scripts/`、`media/`
 - `src/types/`
 - `api/`
 - `src/prototypes.ts`
@@ -156,6 +161,9 @@ docs/asset-list.md  必要な素材の一覧
 
 ### 守ること
 
+- **1ショットは8秒以下**。動画生成（Veo）が一度に作れるのが8秒までなので、
+  延長機能は使わず脚本側で割る。ショートドラマはカットが速いほうが合う
+  （生成の尺は 4 / 6 / 8 秒のどれかに丸められるので、その3つに合わせると無駄が出ない）
 - **選択肢は常に2択。ラベルは10文字以内**（スマホで1行に収めるため）
 - `branch` には `onTimeout` を必ず書く。黙っていた結果もドラマとして描く
 - 選択の直後は `kind: 'reaction'` のショットにする。ここでゲージが動いて手応えが返る
@@ -173,16 +181,23 @@ docs/asset-list.md  必要な素材の一覧
 
 1. 脚本（`content/<名前>/episodes.ts`）と制作メモ（同 `production.ts`）を書く
 2. `npm run shotlist` → `docs/shotlist/<エピソードID>.md` ができる
-3. 表の「画像生成プロンプト」で静止画を作る（ChatGPT）
-4. その静止画を「動きの指示」で動画にする（Google Flow）
-5. できたファイルを `inbox/` に置いて `npm run import-assets`
+3. 素材を作る。**自動生成（`npm run media`、下の節）か、手作業（ChatGPT + Google Flow）**
+4. 手作業の場合は、できたファイルを `inbox/` に置いて `npm run import-assets`
    （WebP / MP4 に変換され、`public/assets/<名前>/` に入る）
 
 **素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できる。**
 先に脚本と尺を固め、素材はあとから差し替えていく。
 
-同じ人物が出るショットでは、`production.ts` の `characters` に設定画の素材IDを書き、
-**見た目を揃える**こと。
+制作メモ（`production.ts`）は3つに分かれている。
+**エクスポート名 `production` と、この3つのキーは変えないこと。**
+
+| キー | 中身 |
+| --- | --- |
+| `characters` | 登場人物。`id`（設定画の素材ID）・`name`・`appearance`（見た目）・`expressions`（表情違い） |
+| `places` | 場所。`id`・`name`・`prompt`（人物なしの背景プロンプト） |
+| `shots` | ショットID → `imagePrompt` / `motionPrompt` / `cameraNote` / `placeId` / `characterIds` / `soundNote` |
+
+同じ人物が出るショットでは `characterIds` に同じ設定画IDを書き、**見た目を揃える**こと。
 
 ### 音声方式の使い分け
 
@@ -201,6 +216,49 @@ docs/asset-list.md  必要な素材の一覧
 **テーマとその適用（`ACTIVE_THEME`）は共通基盤なので、worktree側では変更しない。**
 
 
+## メディアパイプライン（`npm run media`）
+
+脚本から動画までを Gemini API で作る。**お金がかかるので、必ず見積もりを見てから実行する。**
+
+```
+npm run media -- estimate --episode pilot-01                       # 見積もりだけ（無料）
+npm run media -- gen --episode pilot-01 --stage characters         # 設定画
+npm run media -- gen --episode pilot-01 --stage places             # 場所
+npm run media -- gen --episode pilot-01 --stage frames             # 最初のフレーム
+npm run media -- gen --episode pilot-01 --stage videos             # 動画
+npm run media -- review --episode pilot-01 --serve                 # テイクを見比べる
+npm run media -- pick --episode pilot-01 --stage videos --item p1 --take 2
+npm run media -- export --episode pilot-01                         # 圧縮して配置
+```
+
+### 段階を分けている理由
+
+`characters` → `places` → `frames` → `videos` の順で、**前の段階の採用テイクが無いと次に進めない**。
+キャラクターが気に入らないまま動画まで進むと、その分の費用がまるごと無駄になるため。
+
+顔と服装を揃える仕掛けもこの順番で効いている：設定画と場所の画像を**参照画像として渡して**
+最初のフレームを作り、そのフレームを動画の1コマ目にする。
+
+### 費用の決まり
+
+- `gen` は実行前に必ず枚数・秒数・推定費用を表示し、`y` の入力を待つ（`--yes` で省略）
+- `MEDIA_MAX_COST_USD`（既定 5ドル）を超える見積もりは実行しない
+- `--quality draft`（既定）で構図とセリフを確かめ、採用したショットだけ `--quality final` で作り直す
+- モデルIDと料金は `scripts/media/config.mts` にまとめてある。**推測で書かず、公式ドキュメントで確かめて直す**
+- 使ったプロンプト・モデル・推定費用・拒否理由は `media/manifest/<エピソードID>.jsonl` に残る
+
+### テイクと作り直し
+
+- 採用テイクがあるものは**作り直さない**。`--force` か `--shots <ID>` で狙ったものだけ作り直す
+- 作り直しは上書きせず `t01, t02...` と増える。採用は `media/takes/<エピソードID>.json`
+- `media/work/` は gitignore。**コミットするのは圧縮済みの `public/assets/` と、採用・ログだけ**
+
+### 生成できなかったとき
+
+安全フィルタなどで断られたものは理由を記録してスキップし、最後にまとめて表示する。
+`veo-3.1-lite` が画像入力を受け付けなかった場合だけ `veo-3.1-fast` に切り替わり、
+切り替えが起きたことと上限側の費用が報告される。
+
 ## 素材のルール
 
 - 画像・動画・音は**素材ID**で参照し、実ファイルは
@@ -216,6 +274,7 @@ docs/asset-list.md  必要な素材の一覧
 ## APIのルール
 
 - APIキーをフロントに置かない。環境変数に `VITE_` を付けない
+- 素材生成のキーも同じ。`GEMINI_API_KEY` は `.env.local` にだけ置き、コミットしない
 - 出力トークン上限（`AI_MAX_OUTPUT_TOKENS`、既定 1024）と入力文字数上限
   （`FEEDBACK_LIMITS`）を守る。緩めたいときは報告する
 - `APP_PASSCODE` による簡易保護を外さない

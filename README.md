@@ -82,18 +82,39 @@ npm run build       # 型チェック＋本番ビルド
 
 ## 動画素材まわり
 
-ショートドラマ型の素材（動画・静止画）は手作業で生成します。
-
 ```bash
 npm run shotlist        # 脚本から docs/shotlist/<エピソードID>.md を生成
-npm run import-assets   # inbox/ に置いた素材を変換して public/assets/ へ
+npm run import-assets   # inbox/ に置いた手作業の素材を変換して public/assets/ へ
+npm run media -- help   # 脚本から動画までを Gemini API で生成する（下記）
 ```
 
-`import-assets` は ffmpeg を使います（`brew install ffmpeg`）。
+`import-assets` と `media` は ffmpeg を使います（`brew install ffmpeg`）。
 画像は WebP、動画は MP4 / H.264（720×1280・CRF26）に変換されます。
-`--mute` を付けると動画の音声を落とします。
+`import-assets` に `--mute` を付けると動画の音声を落とします。
 
 **素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できます。**
+
+### 自動生成（`npm run media`）
+
+**お金がかかります。** 実行前に必ず見積もりが出て、確認を求められます。
+
+```bash
+npm run media -- estimate --episode pilot-01            # 見積もりだけ（無料）
+npm run media -- gen --episode pilot-01 --stage characters
+npm run media -- gen --episode pilot-01 --stage places
+npm run media -- gen --episode pilot-01 --stage frames
+npm run media -- gen --episode pilot-01 --stage videos
+npm run media -- review --episode pilot-01 --serve      # テイクを見比べる（スマホ可）
+npm run media -- pick --episode pilot-01 --stage videos --item p1 --take 2
+npm run media -- export --episode pilot-01              # 圧縮して public/assets/ へ
+```
+
+- 段階は `characters` → `places` → `frames` → `videos` の順。
+  前の段階の採用テイクが無いと次へ進めません（無駄な費用を防ぐため）
+- `--quality draft`（既定）で構図とセリフを確認し、採用分だけ `--quality final`
+- `GEMINI_API_KEY` は `.env.local` に置きます（コミットしない）
+- `MEDIA_MAX_COST_USD`（既定 5ドル）を超える見積もりは実行されません
+- モデルIDと料金は `scripts/media/config.mts`。生成ログは `media/manifest/` に残ります
 
 ## ディレクトリ
 

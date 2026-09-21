@@ -10,3 +10,6 @@ dist/
 
 # 素材の取り込み用（npm run import-assets）
 inbox/
+
+# メディアパイプラインの生成物（npm run media）
+media/work/
