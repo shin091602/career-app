@@ -1,9 +1,12 @@
 {
   "characters": {
-    "ref-yamada-normal": 1,
-    "ref-yamada-plea": 1,
-    "ref-yamada-think": 1,
-    "ref-kacho-normal": 1,
-    "ref-kacho-stern": 1
+    "ref-yamada-normal": 3,
+    "ref-yamada-plea": 3,
+    "ref-yamada-think": 3,
+    "ref-kacho-normal": 2,
+    "ref-kacho-stern": 2
+  },
+  "places": {
+    "pl-reception": 1
   }
 }

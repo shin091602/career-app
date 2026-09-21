@@ -22,11 +22,30 @@ const INBOX = path.join(ROOT, 'inbox');
 const VIDEO_EXT = new Set(['.mp4', '.mov', '.m4v', '.webm']);
 
 /**
- * そのショットの「手作業版」を inbox/ から探す。
- * ファイル名に素材IDかショットIDが入っていれば、それとみなす。
+ * 手作業版とショットの対応表（media/handmade/<エピソードID>.json）。
+ * `{ "p1": "Bank_manager_drops_loan_file.mp4" }` の形。
+ * 生成ツールが付けた長いファイル名をそのまま使えるようにするため。
  */
-async function handmadeFor(shotId: string, assetId?: string): Promise<string | null> {
+async function handmadeMap(episodeId: string): Promise<Record<string, string>> {
+  const file = path.join(ROOT, 'media', 'handmade', `${episodeId}.json`);
+  if (!existsSync(file)) return {};
+  return JSON.parse(await readFile(file, 'utf8')) as Record<string, string>;
+}
+
+/**
+ * そのショットの「手作業版」を inbox/ から探す。
+ * 対応表にあればそれを使い、無ければファイル名に素材IDかショットIDが
+ * 入っているものを拾う。
+ */
+async function handmadeFor(
+  episodeId: string,
+  shotId: string,
+  assetId?: string,
+): Promise<string | null> {
   if (!existsSync(INBOX)) return null;
+  const mapped = (await handmadeMap(episodeId))[shotId];
+  if (mapped && existsSync(path.join(INBOX, mapped))) return mapped;
+
   const files = await readdir(INBOX);
   const candidates = files.filter((file) => VIDEO_EXT.has(path.extname(file).toLowerCase()));
 
@@ -142,7 +161,9 @@ export async function writeReview(spec: MediaSpec): Promise<string> {
 
       // 動画は手作業版（inbox/）を左端に並べて見比べられるようにする
       const handmade =
-        stage === 'videos' ? await handmadeFor(item.itemId, shot?.videoAssetId) : null;
+        stage === 'videos'
+          ? await handmadeFor(spec.episodeId, item.itemId, shot?.videoAssetId)
+          : null;
       const handmadeCard = handmade
         ? `
           <div class="take handmade">
@@ -158,7 +179,7 @@ export async function writeReview(spec: MediaSpec): Promise<string> {
       <h3>${escapeHtml(item.itemId)}${item.picked ? '' : ' <span class="warn">未採用</span>'}</h3>
       ${shot ? `<p class="sub">${escapeHtml(shot.dialogue.map((line) => `${line.speaker}「${line.text}」`).join(' / ') || 'セリフなし')}</p>` : ''}
       ${exported ? '<p class="sub">アプリに配置済みの素材があります（手作業版との差し替えに注意）</p>' : ''}
-      ${stage === 'videos' && !handmade ? '<p class="sub">手作業版は inbox/ に <code>' + escapeHtml(item.itemId) + '.mp4</code> の名前で置くと、ここに並びます</p>' : ''}
+      ${stage === 'videos' && !handmade ? '<p class="sub">手作業版は inbox/ に <code>' + escapeHtml(item.itemId) + '.mp4</code> の名前で置くか、media/handmade/' + escapeHtml(spec.episodeId) + '.json で対応づけると、ここに並びます</p>' : ''}
       <div class="takes">${handmadeCard}${takes.join('')}</div>
     </section>`);
     }
