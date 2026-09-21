@@ -147,11 +147,13 @@ export function characterSheetPrompt(
   return [
     `キャラクター設定画。${character.appearance}`,
     withReference
-      ? '参照画像と同じ人物。顔・髪型・ひげの有無・服装・絵柄を変えず、表情だけ差し替える。'
+      ? '参照画像と同じ人物。顔・髪型・ひげの有無・服装・撮り方を変えず、表情だけ差し替える。'
       : '',
     `${face}。正面から上半身、まっすぐ立っている。`,
-    '背景は無地の薄いグレー。影は柔らかく。日本のアニメ調。',
-    '実在の人物・企業・ロゴを思わせるものは出さない。',
+    '無地の薄いグレーの背景で撮ったスタジオ写真。柔らかい均一な光。',
+    '実写。85mm相当のレンズ、肌の質感や布の織り目が分かる解像感。' +
+      'イラスト・アニメ調・CG・3Dレンダリングにしない。',
+    '実在の人物・企業・ロゴを思わせるものは出さない。架空の人物。',
     NO_TEXT_RULE,
   ]
     .filter((line) => line !== '')
@@ -159,7 +161,12 @@ export function characterSheetPrompt(
 }
 
 export function placePrompt(place: SpecPlace): string {
-  return [place.prompt, '人物は映さない。実在の企業名やロゴは出さない。', NO_TEXT_RULE].join(' ');
+  return [
+    place.prompt,
+    '人物は映さない。実在の企業名やロゴは出さない。',
+    '実写の写真。イラスト・アニメ調・CGにしない。',
+    NO_TEXT_RULE,
+  ].join(' ');
 }
 
 /** 最初のフレーム。場所と設定画を参照画像として一緒に渡す */
@@ -169,7 +176,7 @@ export function framePrompt(shot: SpecShot, spec: MediaSpec): string {
     .filter((character): character is SpecCharacter => Boolean(character));
 
   const lines = [
-    `動画の最初のコマになる静止画。${shot.imagePrompt}`,
+    `動画の最初のコマになる実写の静止画。${shot.imagePrompt}`,
     shot.cameraNote ?? '',
     characters.length > 0
       ? `参照画像の人物をそのまま使う（顔・髪型・服装を変えない）：${characters

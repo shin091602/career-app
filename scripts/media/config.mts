@@ -135,7 +135,8 @@ export const SHEET_ASPECT = '3:4';
 /** 画面に文字を出さないための指定 */
 export const NO_TEXT_RULE = '画面に文字・字幕・ロゴ・透かしを入れない。';
 export const NEGATIVE_PROMPT =
-  'text, subtitles, captions, letters, numbers, watermark, logo, signage, user interface, split screen';
+  'text, subtitles, captions, letters, numbers, watermark, logo, signage, user interface, split screen, ' +
+  'illustration, anime, cartoon, drawing, painting, 3d render, cgi, plastic skin';
 
 /** 1回の実行あたりの上限費用（ドル）。MEDIA_MAX_COST_USD で上書きできる */
 export const DEFAULT_MAX_COST_USD = 5;
