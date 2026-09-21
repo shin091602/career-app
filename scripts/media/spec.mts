@@ -137,15 +137,25 @@ export async function writeSpec(spec: MediaSpec): Promise<string> {
 
 // ===== プロンプトの組み立て =====
 
-export function characterSheetPrompt(character: SpecCharacter, expression: string): string {
+export function characterSheetPrompt(
+  character: SpecCharacter,
+  expression: string,
+  /** 最初の表情の設定画を参照画像として渡すか（2枚目以降） */
+  withReference = false,
+): string {
   const face = EXPRESSION_LABEL[expression] ?? expression;
   return [
     `キャラクター設定画。${character.appearance}`,
+    withReference
+      ? '参照画像と同じ人物。顔・髪型・ひげの有無・服装・絵柄を変えず、表情だけ差し替える。'
+      : '',
     `${face}。正面から上半身、まっすぐ立っている。`,
     '背景は無地の薄いグレー。影は柔らかく。日本のアニメ調。',
     '実在の人物・企業・ロゴを思わせるものは出さない。',
     NO_TEXT_RULE,
-  ].join(' ');
+  ]
+    .filter((line) => line !== '')
+    .join(' ');
 }
 
 export function placePrompt(place: SpecPlace): string {

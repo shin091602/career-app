@@ -86,17 +86,22 @@ export async function buildPlan(
     const used = new Set(shots.flatMap((shot) => shot.characterIds));
     for (const character of spec.characters) {
       if (!used.has(character.id)) continue;
-      for (const expression of character.expressions) {
+      const [first, ...rest] = character.expressions;
+      for (const expression of [first, ...rest]) {
+        // 2枚目以降は1枚目を参照画像にする（表情違いで顔や服が変わらないように）
+        const withReference = expression !== first;
         all.push({
           stage: 'characters',
           itemId: `${character.id}-${expression}`,
           label: `${character.name} / ${expression}`,
           model: preset.sheet.model.id,
-          prompt: characterSheetPrompt(character, expression),
+          prompt: characterSheetPrompt(character, expression, withReference),
           costUsd: imagePrice(preset.sheet.model, preset.sheet.size),
           maxCostUsd: imagePrice(preset.sheet.model, preset.sheet.size),
           image: { aspect: SHEET_ASPECT, size: preset.sheet.size },
-          needs: [],
+          needs: withReference
+            ? [{ stage: 'characters' as Stage, itemId: `${character.id}-${first}` }]
+            : [],
           characterId: character.id,
           expression,
         });
