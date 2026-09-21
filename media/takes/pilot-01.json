@@ -8,5 +8,10 @@
   },
   "places": {
     "pl-reception": 1
+  },
+  "frames": {
+    "p2": 1,
+    "p3": 1,
+    "p1": 1
   }
 }

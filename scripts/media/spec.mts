@@ -178,6 +178,10 @@ export function framePrompt(shot: SpecShot, spec: MediaSpec): string {
   const lines = [
     `動画の最初のコマになる実写の静止画。${shot.imagePrompt}`,
     shot.cameraNote ?? '',
+    // 背景の参照画像に引っぱられて人物が小さく写るのを防ぐ
+    characters.length > 0
+      ? 'カメラの高さは座っている主人公の目線。人物は画面の中で大きく写す（バストショット〜ウエストショット）。手前に家具で顔を隠さない。'
+      : '',
     characters.length > 0
       ? `参照画像の人物をそのまま使う（顔・髪型・服装を変えない）：${characters
           .map((character) => character.name)

@@ -234,7 +234,7 @@ export const production: ProductionNotes = {
       soundNote: '革靴の足音と、紙の束が机に当たる音。',
     },
     p2: {
-      imagePrompt: `日本の地方銀行支店の応接室。ベージュの作業着を着た60代半ばの男性が机越しに深く頭を下げている。${STYLE}`,
+      imagePrompt: `日本の地方銀行支店の応接室。ベージュの作業着を着た60代半ばの男性が、低いテーブル越しに深く頭を下げている。座ったこちらの目線の高さから見た近い距離で、頭と肩が画面の大きな部分を占める。${STYLE}`,
       motionPrompt:
         '社長が頭を下げたまま数秒静止し、ゆっくり顔を上げてこちらを見る。言い終えたあとは動きを止める。',
       cameraNote: `${FIRST_PERSON} 分岐の「間」を作るため、最後の2秒は静止。声込みで書き出す。`,
@@ -242,7 +242,7 @@ export const production: ProductionNotes = {
       characterIds: ['ref-yamada'],
     },
     p3: {
-      imagePrompt: `日本の地方銀行支店の応接室。濃紺のスーツの40代後半の男性が目を細めてこちらを見ている。夕方の斜めの光。${STYLE}`,
+      imagePrompt: `日本の地方銀行支店の応接室。濃紺のスーツの40代後半の男性が、低いテーブルを挟んで正面のソファに座り、目を細めてこちらを見ている。バストショットで顔が画面の上半分を占める。夕方の斜めの光。${STYLE}`,
       motionPrompt: '課長が目を細め、わずかに身を乗り出してこちらを見つめる。',
       cameraNote: `${FIRST_PERSON} 問い詰める緊張感。声込みで書き出す。`,
       placeId: 'pl-reception',
