@@ -342,7 +342,6 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
         referenceFiles,
         seconds: item.video.seconds,
         resolution: preset.video.resolution,
-        withAudio: item.video.withAudio,
         downloadPath: output,
       });
 
@@ -385,7 +384,7 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
         params: {
           seconds: item.video.seconds,
           resolution: preset.video.resolution,
-          withAudio: item.video.withAudio,
+          keepAudioOnExport: item.video.withAudio,
           referenceImages: referenceFiles.length,
         },
         estimatedCostUsd: cost,

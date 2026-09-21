@@ -7,7 +7,7 @@
  * - 安全フィルタで断られた場合は例外にせず、理由を返してスキップできるようにする
  */
 import { readFile } from 'node:fs/promises';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, VideoGenerationReferenceType } from '@google/genai';
 import type { ImageSize, Resolution } from './config.mts';
 import { NEGATIVE_PROMPT } from './config.mts';
 import { requireApiKey } from './env.mts';
@@ -136,7 +136,6 @@ export interface VideoRequest {
   referenceFiles: string[];
   seconds: number;
   resolution: Resolution;
-  withAudio: boolean;
   /** 書き出し先 */
   downloadPath: string;
 }
@@ -150,21 +149,25 @@ async function requestVideo(
 
   let operation = await ai().models.generateVideos({
     model,
-    prompt: request.prompt,
-    image: { imageBytes: frame.data, mimeType: frame.mimeType },
+    // prompt / image 直渡しは非推奨になったので source を使う
+    source: {
+      prompt: request.prompt,
+      image: { imageBytes: frame.data, mimeType: frame.mimeType },
+    },
     config: {
       aspectRatio: '9:16',
       resolution: request.resolution,
       durationSeconds: request.seconds,
       numberOfVideos: 1,
       negativePrompt: NEGATIVE_PROMPT,
-      generateAudio: request.withAudio,
+      // generateAudio は Developer API では使えない（Veo 3.1 は常に音声込みで作る）。
+      // 無音で使いたいショットは、書き出しのときに ffmpeg で音を落とす
       personGeneration: 'allow_adult',
       ...(references.length > 0
         ? {
             referenceImages: references.map((reference) => ({
               image: { imageBytes: reference.data, mimeType: reference.mimeType },
-              referenceType: 'asset',
+              referenceType: VideoGenerationReferenceType.ASSET,
             })),
           }
         : {}),
