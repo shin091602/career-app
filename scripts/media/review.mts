@@ -74,6 +74,10 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function assetIdOf(spec: MediaSpec, shotId: string): string | undefined {
+  return spec.shots.find((shot) => shot.id === shotId)?.videoAssetId;
+}
+
 interface ReviewItem {
   stage: Stage;
   itemId: string;
@@ -97,7 +101,10 @@ async function collect(spec: MediaSpec): Promise<ReviewItem[]> {
   for (const stage of STAGES) {
     for (const itemId of ids[stage]) {
       const takes = await listTakes(spec.episodeId, stage, itemId);
-      if (takes.length === 0) continue;
+      // 動画は、まだ生成していなくても手作業版があれば並べる（比較用）
+      const handmade =
+        stage === 'videos' ? await handmadeFor(spec.episodeId, itemId, assetIdOf(spec, itemId)) : null;
+      if (takes.length === 0 && !handmade) continue;
       items.push({ stage, itemId, takes, picked: pickOf(picks, stage, itemId) });
     }
   }
