@@ -143,11 +143,12 @@ export const SCENE_ASPECT = '9:16';
 /** 設定画は人物が見やすい比率で作る */
 export const SHEET_ASPECT = '3:4';
 
-/** 画面に文字を出さないための指定 */
-export const NO_TEXT_RULE = '画面に文字・字幕・ロゴ・透かしを入れない。';
-export const NEGATIVE_PROMPT =
-  'text, subtitles, captions, letters, numbers, watermark, logo, signage, user interface, split screen, ' +
-  'illustration, anime, cartoon, drawing, painting, 3d render, cgi, plastic skin';
+/**
+ * 画面に文字を出さないための指定。
+ * Veo 3.1 は negativePrompt に対応していないので、**プロンプト本文に書く**。
+ */
+export const NO_TEXT_RULE =
+  '画面に文字・字幕・ロゴ・透かしを入れない。イラスト・アニメ調・CGにしない。';
 
 /** 1回の実行あたりの上限費用（ドル）。MEDIA_MAX_COST_USD で上書きできる */
 export const DEFAULT_MAX_COST_USD = 5;

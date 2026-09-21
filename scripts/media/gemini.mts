@@ -9,7 +9,6 @@
 import { readFile } from 'node:fs/promises';
 import { GoogleGenAI, VideoGenerationReferenceType } from '@google/genai';
 import type { ImageSize, Resolution } from './config.mts';
-import { NEGATIVE_PROMPT } from './config.mts';
 import { requireApiKey } from './env.mts';
 
 let client: GoogleGenAI | null = null;
@@ -38,9 +37,17 @@ export function looksBilling(message: string): boolean {
   return /RESOURCE_EXHAUSTED|prepayment|credits|billing|quota|\b402\b|\b429\b/i.test(message);
 }
 
-/** Lite が画像入力を受け付けなかったか（＝上位モデルに切り替える） */
+/**
+ * Lite が**画像入力**を受け付けなかったか（＝上位モデルに切り替える）。
+ * 「このパラメータは使えない」系のエラーで切り替えないよう、
+ * 画像・フレーム・参照画像の話であることまで確かめる。
+ */
 function looksUnsupportedInput(message: string): boolean {
-  return /not support|unsupported|invalid argument|image.*not|400/i.test(message);
+  const aboutImage = /image|frame|reference|imageBytes/i.test(message);
+  const unsupported = /not support|unsupported|isn't supported|is not allowed|invalid argument/i.test(
+    message,
+  );
+  return aboutImage && unsupported;
 }
 
 async function toInlineImage(file: string): Promise<{ mimeType: string; data: string }> {
@@ -159,8 +166,9 @@ async function requestVideo(
       resolution: request.resolution,
       durationSeconds: request.seconds,
       numberOfVideos: 1,
-      negativePrompt: NEGATIVE_PROMPT,
-      // generateAudio は Developer API では使えない（Veo 3.1 は常に音声込みで作る）。
+      // negativePrompt は Veo 3.1 では使えないので、文字を出さない指示は
+      // プロンプト本文（NO_TEXT_RULE）に入れてある。
+      // generateAudio も Developer API では使えない（Veo 3.1 は常に音声込みで作る）。
       // 無音で使いたいショットは、書き出しのときに ffmpeg で音を落とす
       personGeneration: 'allow_adult',
       ...(references.length > 0
