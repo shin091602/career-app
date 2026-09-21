@@ -83,8 +83,8 @@ function parseArgs(argv: string[]): Args {
         index += 1;
         break;
       case '--quality':
-        if (value !== 'draft' && value !== 'final') {
-          throw new Error('--quality は draft か final');
+        if (value !== 'draft' && value !== 'mid' && value !== 'final') {
+          throw new Error('--quality は draft / mid / final のどれか');
         }
         args.quality = value;
         index += 1;
@@ -518,8 +518,8 @@ async function runExport(spec: MediaSpec): Promise<void> {
 
 function usage(): void {
   console.log(`使い方：
-  npm run media -- estimate --episode <ID> [--quality draft|final] [--stage <段階>] [--shots <ID,ID>]
-  npm run media -- gen      --episode <ID> --stage <段階> [--quality draft|final] [--shots ...] [--force] [--yes]
+  npm run media -- estimate --episode <ID> [--quality draft|mid|final] [--stage <段階>] [--shots <ID,ID>]
+  npm run media -- gen      --episode <ID> --stage <段階> [--quality draft|mid|final] [--shots ...] [--force] [--yes]
   npm run media -- pick     --episode <ID> --stage <段階> --item <ID> --take <番号>
   npm run media -- review   --episode <ID> [--serve]
   npm run media -- export   --episode <ID>

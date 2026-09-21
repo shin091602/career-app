@@ -243,7 +243,16 @@ npm run media -- export --episode pilot-01                         # 圧縮し�
 
 - `gen` は実行前に必ず枚数・秒数・推定費用を表示し、`y` の入力を待つ（`--yes` で省略）
 - `MEDIA_MAX_COST_USD`（既定 5ドル）を超える見積もりは実行しない
-- `--quality draft`（既定）で構図とセリフを確かめ、採用したショットだけ `--quality final` で作り直す
+- 品質は3段階。`draft`（既定）で構図とセリフを確かめ、`mid` で質を上げ、採用分だけ `final`
+
+| 品質 | 設定画 | 最初のフレーム | 動画 | pilot-01（3ショット20秒）の目安 |
+| --- | --- | --- | --- | --- |
+| `draft` | flash-lite 1K | flash 1K | Veo Lite 720p | 約 $1.4 |
+| `mid` | flash 1K | **pro 2K** | **Veo Fast**＋設定画参照 | 約 $2.8 |
+| `final` | pro 2K | pro 2K | **Veo 標準**＋設定画参照 | 約 $10 |
+
+`mid` と `final` は設定画を `referenceImages` として動画に直接渡せる（Lite では使えない）。
+そのぶん**尺が8秒固定**になるので、短いショットは書き出しで詰める。
 - モデルIDと料金は `scripts/media/config.mts` にまとめてある。**推測で書かず、公式ドキュメントで確かめて直す**
 - 使ったプロンプト・モデル・推定費用・拒否理由は `media/manifest/<エピソードID>.jsonl` に残る
 

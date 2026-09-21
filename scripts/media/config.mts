@@ -10,7 +10,7 @@
  * 値上げ・値下げがあり得るので、費用を見積もるときはここだけを直す。
  */
 
-export type Quality = 'draft' | 'final';
+export type Quality = 'draft' | 'mid' | 'final';
 
 /** 生成の段階。人のチェックポイントはこの区切りに合わせる */
 export type Stage = 'characters' | 'places' | 'frames' | 'videos';
@@ -101,6 +101,17 @@ export const QUALITY_PRESETS: Record<Quality, QualityPreset> = {
       fallbackModel: VIDEO_MODELS.fast,
       resolution: '720p',
       useReferenceImages: false,
+    },
+  },
+  mid: {
+    label: '中間（構図は決まった。質を上げて確かめる）',
+    sheet: { model: IMAGE_MODELS.flashImage, size: '1K' },
+    frame: { model: IMAGE_MODELS.proImage, size: '2K' },
+    video: {
+      model: VIDEO_MODELS.fast,
+      resolution: '720p',
+      // 設定画を直接渡せる（Lite では使えない一貫性の切り札）。尺は8秒固定になる
+      useReferenceImages: true,
     },
   },
   final: {
