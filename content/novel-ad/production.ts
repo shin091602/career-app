@@ -1,7 +1,11 @@
 import type { ProductionNotes } from '../../src/types';
 
 /**
- * 素材の制作メモ（ショットID → 生成プロンプト）。
- * アプリからは読まれず、npm run shotlist だけが使う。
+ * 広告代理店編の制作メモ。まだ中身はない。
+ * 書き方は content/novel-bank/production.ts を見ること。
  */
-export const production: ProductionNotes = {};
+export const production: ProductionNotes = {
+  characters: [],
+  places: [],
+  shots: {},
+};

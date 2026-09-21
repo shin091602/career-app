@@ -60,15 +60,47 @@ function subtitleCell(shot: Shot): string {
 }
 
 function charactersCell(production: ProductionNotes, shot: Shot): string {
-  const note = production[shot.id];
-  if (!note?.characters || note.characters.length === 0) return '—';
-  return note.characters
-    .map((character) =>
-      character.referenceAssetId
-        ? `${character.name}（設定画 \`${character.referenceAssetId}\`）`
-        : character.name,
-    )
-    .join('<br>');
+  const note = production.shots[shot.id];
+  const parts: string[] = [];
+
+  if (note?.placeId) {
+    const place = production.places.find((candidate) => candidate.id === note.placeId);
+    parts.push(`場所：${place?.name ?? note.placeId}（\`${note.placeId}\`）`);
+  }
+  for (const characterId of note?.characterIds ?? []) {
+    const character = production.characters.find((candidate) => candidate.id === characterId);
+    parts.push(`${character?.name ?? characterId}（設定画 \`${characterId}\`）`);
+  }
+
+  return parts.length > 0 ? parts.join('<br>') : '—';
+}
+
+/** 設定画（キャラクター・場所）の一覧 */
+function castSection(production: ProductionNotes): string {
+  const lines: string[] = [];
+
+  if (production.characters.length > 0) {
+    lines.push('### 登場人物の設定画', '');
+    lines.push('| 設定画ID | 名前 | 表情 | 見た目 |', '| --- | --- | --- | --- |');
+    for (const character of production.characters) {
+      const expressions = (character.expressions ?? ['normal']).join(' / ');
+      lines.push(
+        `| \`${character.id}\` | ${character.name} | ${expressions} | ${cell(character.appearance)} |`,
+      );
+    }
+    lines.push('');
+  }
+
+  if (production.places.length > 0) {
+    lines.push('### 場所', '');
+    lines.push('| 場所ID | 名前 | 背景画のプロンプト |', '| --- | --- | --- |');
+    for (const place of production.places) {
+      lines.push(`| \`${place.id}\` | ${place.name} | ${cell(place.prompt)} |`);
+    }
+    lines.push('');
+  }
+
+  return lines.length > 0 ? lines.join('\n') : '';
 }
 
 /** 分岐がどこで分かれてどこで合流するかを書き出す */
@@ -116,7 +148,7 @@ function renderEpisode(
   ).length;
 
   const rows = episode.shots.map((shot) => {
-    const note = production[shot.id];
+    const note = production.shots[shot.id];
     return [
       `\`${shot.id}\``,
       `${shot.durationSec}s`,
@@ -145,12 +177,28 @@ ${episode.description}
 
 ## 作り方
 
-1. この表の「画像生成プロンプト」で静止画を作る（ChatGPT）
-2. その静止画を「動きの指示」で動画にする（Google Flow）
-3. できたファイルを \`inbox/\` に置き、\`npm run import-assets\` を実行する
-4. \`npm run shotlist\` をもう一度実行すると、素材状況の印が更新される
+### 自動生成（Gemini / Veo）
 
+\`\`\`
+npm run media -- estimate --episode ${episode.id}                      # 費用の見積もり
+npm run media -- gen --episode ${episode.id} --stage characters         # 設定画
+npm run media -- gen --episode ${episode.id} --stage places            # 場所
+npm run media -- gen --episode ${episode.id} --stage frames            # 最初のフレーム
+npm run media -- gen --episode ${episode.id} --stage videos            # 動画
+npm run media -- review --episode ${episode.id} --serve                # 見比べる
+npm run media -- export --episode ${episode.id}                        # 圧縮して配置
+\`\`\`
+
+### 手作業（ChatGPT / Google Flow）
+
+1. この表の「画像生成プロンプト」で静止画を作る
+2. その静止画を「動きの指示」で動画にする
+3. できたファイルを \`inbox/\` に置き、\`npm run import-assets\` を実行する
+
+どちらの場合も、\`npm run shotlist\` をもう一度実行すると素材状況の印が更新される。
 同じ人物が出るショットでは、**設定画を必ず参照して見た目を揃える**こと。
+
+${castSection(production)}
 
 ## 分岐
 

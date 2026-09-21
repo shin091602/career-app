@@ -8,6 +8,7 @@ import type { Episode } from '../../src/types';
  * - 分岐は2回。どちらも合流型（増えるのは反応ショットだけ）
  * - 結末は2つ。結果カードのタイプ診断で回収状況を見せる
  * - 最後は課長の一言で次回に引く
+ * - 1ショットは8秒以下（動画生成の上限に合わせ、カットを速くする）
  *
  * 登場する会社・人物・数値はすべて架空。取材・裏取りをしていないため
  * verified: false、sources は空にしてある。
@@ -70,7 +71,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's03-chat',
       kind: 'story',
-      durationSec: 7,
+      durationSec: 6,
       videoAssetId: 'v-s03-desk',
       imageAssetId: 'i-s03-desk',
       interrupt: {
@@ -100,7 +101,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's04-move',
       kind: 'story',
-      durationSec: 5,
+      durationSec: 4,
       videoAssetId: 'v-s04-move',
       imageAssetId: 'i-s04-move',
       telop: { time: '10:30', place: '山田製作所' },
@@ -112,16 +113,26 @@ export const bankEpisode01: Episode = {
     {
       id: 's05-ask',
       kind: 'story',
-      durationSec: 10,
+      durationSec: 6,
       videoAssetId: 'v-s05-ask',
       imageAssetId: 'i-s05-ask',
       subtitles: [
         { speaker: '山田社長', text: '注文が増えてね。機械が追いつかない。', atSec: 0.5 },
-        { speaker: '山田社長', text: '3,000万、なんとかならないか。', atSec: 3.4 },
-        { speaker: '（あなた）', text: '……どう答える。', atSec: 6.2 },
+        { speaker: '山田社長', text: '3,000万、なんとかならないか。', atSec: 3.2 },
       ],
+      next: 's05b-wait',
+    },
+
+    // ----- 分岐そのものは「返事を待たれている4秒」に分けてある -----
+    {
+      id: 's05b-wait',
+      kind: 'story',
+      durationSec: 4,
+      videoAssetId: 'v-s05b-wait',
+      imageAssetId: 'i-s05b-wait',
+      subtitles: [{ speaker: '（あなた）', text: '……どう答える。', atSec: 0.4 }],
       branch: {
-        atSec: 7.5,
+        atSec: 1.6,
         timeLimitSec: 10,
         onTimeout: {
           label: '答えられなかった',
@@ -153,7 +164,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's06a-listen',
       kind: 'reaction',
-      durationSec: 7,
+      durationSec: 6,
       videoAssetId: 'v-s06a-listen',
       imageAssetId: 'i-s06a-listen',
       subtitles: [
@@ -165,7 +176,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's06b-silence',
       kind: 'reaction',
-      durationSec: 7,
+      durationSec: 6,
       videoAssetId: 'v-s06b-silence',
       imageAssetId: 'i-s06b-silence',
       subtitles: [
@@ -179,13 +190,23 @@ export const bankEpisode01: Episode = {
     {
       id: 's07-turn',
       kind: 'story',
-      durationSec: 9,
+      durationSec: 6,
       videoAssetId: 'v-s07-turn',
       imageAssetId: 'i-s07-turn',
       subtitles: [
         { speaker: '山田社長', text: '実は、その1社から話が来ていて。', atSec: 0.5 },
         { speaker: '山田社長', text: '来期は量を減らすかもしれない、と。', atSec: 3.2 },
-        { speaker: '（あなた）', text: '……聞かなかったことにはできない。', atSec: 6.0 },
+      ],
+      next: 's07b-weight',
+    },
+    {
+      id: 's07b-weight',
+      kind: 'story',
+      durationSec: 4,
+      videoAssetId: 'v-s07b-weight',
+      imageAssetId: 'i-s07b-weight',
+      subtitles: [
+        { speaker: '（あなた）', text: '聞かなかったことには、できない。', atSec: 0.4 },
       ],
       next: 's08-decide',
     },
@@ -234,7 +255,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's09a-carry',
       kind: 'reaction',
-      durationSec: 7,
+      durationSec: 6,
       videoAssetId: 'v-s09a-carry',
       imageAssetId: 'i-s09a-carry',
       subtitles: [
@@ -246,7 +267,7 @@ export const bankEpisode01: Episode = {
     {
       id: 's09b-hold',
       kind: 'reaction',
-      durationSec: 7,
+      durationSec: 6,
       videoAssetId: 'v-s09b-hold',
       imageAssetId: 'i-s09b-hold',
       subtitles: [
@@ -288,7 +309,7 @@ export const bankEpisode01: Episode = {
     {
       id: 'd01-decide',
       kind: 'debrief',
-      durationSec: 9,
+      durationSec: 6,
       videoAssetId: 'v-d01-decide',
       imageAssetId: 'i-d01-decide',
       subtitles: [
@@ -296,7 +317,7 @@ export const bankEpisode01: Episode = {
         {
           speaker: '佐伯',
           text: '資料をそろえて、社内で検討するんだ。',
-          atSec: 3.4,
+          atSec: 3.2,
           terms: [
             {
               term: '稟議（りんぎ）',
@@ -304,20 +325,34 @@ export const bankEpisode01: Episode = {
             },
           ],
         },
-        { speaker: '佐伯', text: '訪問の仕事は「聞き出すこと」だよ。', atSec: 6.4 },
       ],
+    },
+    {
+      id: 'd01b-visit',
+      kind: 'debrief',
+      durationSec: 4,
+      videoAssetId: 'v-d01b-visit',
+      imageAssetId: 'i-d01b-visit',
+      subtitles: [{ speaker: '佐伯', text: '訪問の仕事は「聞き出すこと」だよ。', atSec: 0.4 }],
     },
     {
       id: 'd02-concentration',
       kind: 'debrief',
-      durationSec: 9,
+      durationSec: 6,
       videoAssetId: 'v-d02-concentration',
       imageAssetId: 'i-d02-concentration',
       subtitles: [
         { speaker: '佐伯', text: '1社で7割。良い話にも危ない話にもなる。', atSec: 0.5 },
-        { speaker: '佐伯', text: '止まったとき、一気に苦しくなるからね。', atSec: 3.6 },
-        { speaker: '佐伯', text: '数字は「どこから来たか」まで見る。', atSec: 6.4 },
+        { speaker: '佐伯', text: '止まったとき、一気に苦しくなるからね。', atSec: 3.2 },
       ],
+    },
+    {
+      id: 'd02b-origin',
+      kind: 'debrief',
+      durationSec: 4,
+      videoAssetId: 'v-d02b-origin',
+      imageAssetId: 'i-d02b-origin',
+      subtitles: [{ speaker: '佐伯', text: '数字は「どこから来たか」まで見る。', atSec: 0.4 }],
     },
   ],
   endings: [
@@ -327,7 +362,7 @@ export const bankEpisode01: Episode = {
       type: '持ち帰り型',
       summary:
         'その場で答えを出さず、確かめるべきことを持ち帰った。実務に近い判断だが、相手を待たせる責任も引き受けることになる。',
-      debriefShotIds: ['d01-decide', 'd02-concentration'],
+      debriefShotIds: ['d01-decide', 'd01b-visit', 'd02-concentration', 'd02b-origin'],
     },
     {
       id: 'ending-propose',
@@ -335,7 +370,7 @@ export const bankEpisode01: Episode = {
       type: '提案先行型',
       summary:
         'その場で代案を出して前に進めた。動きは早いが、相手が本当に納得しているかを確かめる手間が残る。',
-      debriefShotIds: ['d01-decide', 'd02-concentration'],
+      debriefShotIds: ['d01-decide', 'd01b-visit', 'd02-concentration', 'd02b-origin'],
     },
   ],
 };

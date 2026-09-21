@@ -5,6 +5,13 @@ import { nextIdsOf } from './episodes.mts';
 const CHOICE_LABEL_MAX = 10;
 
 /**
+ * 1ショットの上限（秒）。
+ * 動画生成（Veo）が一度に作れるのが8秒までで、延長は使わず脚本側で割る方針。
+ * ショートドラマはカットが速いほうが合うので、8秒を超えるショットは分割する。
+ */
+const SHOT_MAX_SEC = 8;
+
+/**
  * エピソードの検査。
  * ここで弾いておけば、素材を作り始めてから構造の作り直しになるのを防げる。
  */
@@ -28,15 +35,32 @@ export function validateEpisode(
   }
 
   const gaugeKeys = new Set(episode.gauges.map((gauge) => gauge.key));
+  const placeIds = new Set(production.places.map((place) => place.id));
+  const characterIds = new Set(production.characters.map((character) => character.id));
 
   for (const shot of episode.shots) {
     const at = `${where}/${shot.id}`;
 
-    if (!production[shot.id]) {
-      problems.push(`${at}: production.ts に制作メモがない`);
+    const note = production.shots[shot.id];
+    if (!note) {
+      problems.push(`${at}: production.ts の shots に制作メモがない`);
+    } else {
+      if (note.placeId && !placeIds.has(note.placeId)) {
+        problems.push(`${at}: 知らない場所を指している（${note.placeId}）`);
+      }
+      for (const characterId of note.characterIds ?? []) {
+        if (!characterIds.has(characterId)) {
+          problems.push(`${at}: 知らない登場人物を指している（${characterId}）`);
+        }
+      }
     }
     if (shot.durationSec <= 0) {
       problems.push(`${at}: durationSec が 0 以下`);
+    }
+    if (shot.durationSec > SHOT_MAX_SEC) {
+      problems.push(
+        `${at}: durationSec が ${shot.durationSec} 秒。1ショットは ${SHOT_MAX_SEC} 秒以下に分割する`,
+      );
     }
     if (!shot.videoAssetId && !shot.imageAssetId) {
       problems.push(`${at}: videoAssetId も imageAssetId も無い（絵コンテのままになる）`);
