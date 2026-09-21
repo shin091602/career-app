@@ -9,13 +9,43 @@
  */
 import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
 import path from 'node:path';
 import { ROOT, assetPath } from '../episodes.mts';
 import { STAGES, STAGE_LABEL, formatUsd, type Stage } from './config.mts';
 import type { MediaSpec } from './spec.mts';
 import { WORK_DIR, extOf, listTakes, loadPicks, pickOf, readTakeMeta, takeName } from './state.mts';
+
+/** 手作業で作った素材の置き場所（inbox/）。配信時は /_inbox/ で見られるようにする */
+const INBOX = path.join(ROOT, 'inbox');
+const VIDEO_EXT = new Set(['.mp4', '.mov', '.m4v', '.webm']);
+
+/**
+ * そのショットの「手作業版」を inbox/ から探す。
+ * ファイル名に素材IDかショットIDが入っていれば、それとみなす。
+ */
+async function handmadeFor(shotId: string, assetId?: string): Promise<string | null> {
+  if (!existsSync(INBOX)) return null;
+  const files = await readdir(INBOX);
+  const candidates = files.filter((file) => VIDEO_EXT.has(path.extname(file).toLowerCase()));
+
+  const base = (file: string) => path.basename(file, path.extname(file)).toLowerCase();
+  const exact = candidates.find(
+    (file) => base(file) === shotId.toLowerCase() || (assetId && base(file) === assetId.toLowerCase()),
+  );
+  if (exact) return exact;
+
+  return (
+    candidates.find((file) => {
+      const name = base(file);
+      return (
+        (assetId !== undefined && name.includes(assetId.toLowerCase())) ||
+        new RegExp(`(^|[^a-z0-9])${shotId.toLowerCase()}([^a-z0-9]|$)`).test(name)
+      );
+    }) ?? null
+  );
+}
 
 function escapeHtml(text: string): string {
   return text
@@ -110,12 +140,26 @@ export async function writeReview(spec: MediaSpec): Promise<string> {
           ? existsSync(assetPath(spec.prototypeId, shot.videoAssetId, 'mp4'))
           : false;
 
+      // 動画は手作業版（inbox/）を左端に並べて見比べられるようにする
+      const handmade =
+        stage === 'videos' ? await handmadeFor(item.itemId, shot?.videoAssetId) : null;
+      const handmadeCard = handmade
+        ? `
+          <div class="take handmade">
+            <div class="take-head"><strong>手作業版</strong></div>
+            <video src="../_inbox/${encodeURIComponent(handmade)}" controls playsinline preload="metadata"></video>
+            <dl><dt>作り方</dt><dd>ChatGPT + Google Flow</dd><dt>ファイル</dt><dd>${escapeHtml(handmade)}</dd></dl>
+            <p class="sub">見るところ：顔の一貫性／日本語のセリフ／口の動き</p>
+          </div>`
+        : '';
+
       blocks.push(`
     <section class="item">
       <h3>${escapeHtml(item.itemId)}${item.picked ? '' : ' <span class="warn">未採用</span>'}</h3>
       ${shot ? `<p class="sub">${escapeHtml(shot.dialogue.map((line) => `${line.speaker}「${line.text}」`).join(' / ') || 'セリフなし')}</p>` : ''}
       ${exported ? '<p class="sub">アプリに配置済みの素材があります（手作業版との差し替えに注意）</p>' : ''}
-      <div class="takes">${takes.join('')}</div>
+      ${stage === 'videos' && !handmade ? '<p class="sub">手作業版は inbox/ に <code>' + escapeHtml(item.itemId) + '.mp4</code> の名前で置くと、ここに並びます</p>' : ''}
+      <div class="takes">${handmadeCard}${takes.join('')}</div>
     </section>`);
     }
 
@@ -143,6 +187,8 @@ export async function writeReview(spec: MediaSpec): Promise<string> {
   .takes { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
   .take { flex: 0 0 200px; background: #1c1f26; border: 1px solid #2c3038; border-radius: 10px; padding: 10px; }
   .take.picked { border-color: #6fd3a0; }
+  .take.handmade { border-color: #7fb2ff; background: #191f2b; }
+  .take .sub { font-size: 0.75rem; margin: 6px 0 0; }
   .take-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .badge { background: #6fd3a0; color: #10231a; border-radius: 999px; padding: 1px 8px; font-size: 0.75rem; }
   video, img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; background: #000; border-radius: 6px; }
@@ -186,6 +232,9 @@ const MIME: Record<string, string> = {
   '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
   '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.m4v': 'video/x-m4v',
+  '.webm': 'video/webm',
   '.json': 'application/json; charset=utf-8',
 };
 
@@ -203,9 +252,13 @@ export function serveWork(episodeId: string, port = 5180): void {
   const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://localhost');
     const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    const target = path.join(WORK_DIR, relative);
 
-    if (!target.startsWith(WORK_DIR) || !existsSync(target)) {
+    // /_inbox/ は手作業版の比較用。それ以外は media/work/ の中だけ
+    const inbox = relative.startsWith('_inbox/');
+    const root = inbox ? INBOX : WORK_DIR;
+    const target = path.join(root, inbox ? relative.slice('_inbox/'.length) : relative);
+
+    if (!target.startsWith(root) || !existsSync(target)) {
       response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
       response.end('ありません');
       return;
@@ -228,6 +281,8 @@ export function serveWork(episodeId: string, port = 5180): void {
     console.log(`\n確認用ページを配信しています（Ctrl+C で止める）：`);
     console.log(`  PC  ： http://localhost:${port}/${episodeId}/review.html`);
     if (lan) console.log(`  スマホ： http://${lan}:${port}/${episodeId}/review.html`);
-    console.log(`  （配信しているのは ${path.relative(ROOT, WORK_DIR)} だけです）`);
+    console.log(
+      `  （配信しているのは ${path.relative(ROOT, WORK_DIR)} と、比較用の inbox/ だけです）`,
+    );
   });
 }

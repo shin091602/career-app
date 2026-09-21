@@ -33,6 +33,11 @@ function looksBlocked(message: string): boolean {
   return /safety|blocked|prohibited|policy|rai|violat|sensitive/i.test(message);
 }
 
+/** 請求・残高・レート制限の問題か（＝残りを試しても同じなので、その場で止める） */
+export function looksBilling(message: string): boolean {
+  return /RESOURCE_EXHAUSTED|prepayment|credits|billing|quota|\b402\b|\b429\b/i.test(message);
+}
+
 /** Lite が画像入力を受け付けなかったか（＝上位モデルに切り替える） */
 function looksUnsupportedInput(message: string): boolean {
   return /not support|unsupported|invalid argument|image.*not|400/i.test(message);

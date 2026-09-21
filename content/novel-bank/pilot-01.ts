@@ -6,9 +6,7 @@ import type { Episode } from '../../src/types';
  * 目的は素材の作り方の検証。
  * - 手作業（ChatGPT + Google Flow）と自動生成（npm run media）で
  *   同じ3ショットを作り、**顔の一貫性・日本語のセリフ・口の動き**を見比べる
- * - 音声方式の比較も兼ねる
- *   - p1 / p2 は audioMode: 'embedded'（動画に音声が入っている想定）
- *   - p3 は audioMode: 'separate'（無音動画に、アプリ側でBGMと効果音を重ねる）
+ * - 音声は**動画生成で声ごと作る**方針なので、3ショットとも audioMode: 'embedded'
  *
  * 登場人物は融資課長と町工場の社長の2人、場所は支店の応接室だけ。
  * 素材が無いあいだは絵コンテ風で実尺どおりに再生される。
@@ -17,7 +15,7 @@ export const pilotEpisode: Episode = {
   id: 'pilot-01',
   title: '【試作】素材の作り方の検証',
   jobTitle: '銀行員（法人営業）',
-  description: '3ショットだけの検証用。手作業と自動生成を見比べ、音声方式も確かめる。',
+  description: '3ショットだけの検証用。手作業と自動生成を見比べ、声込みの動画を確かめる。',
   verified: false,
   sources: [],
   audioMode: 'embedded',
@@ -70,9 +68,7 @@ export const pilotEpisode: Episode = {
       durationSec: 6,
       videoAssetId: 'v-p3-proof',
       imageAssetId: 'i-p3-proof',
-      // 無音動画＋アプリ側の音。BGMと効果音の素材が無いうちは無音のまま進む
-      audioMode: 'separate',
-      sound: { bgm: 'bgm-office', se: 'se-notify' },
+      audioMode: 'embedded',
       subtitles: [
         { speaker: '融資課長', text: '根拠は？', atSec: 0.8 },
         { speaker: '融資課長', text: '数字で説明できるか。', atSec: 2.4 },
@@ -84,7 +80,7 @@ export const pilotEpisode: Episode = {
       id: 'pilot-ending',
       shotId: 'p3',
       type: '検証用',
-      summary: '試作用のエピソードなので、結末は1つだけ。素材の作り方と音声方式の比較に使う。',
+      summary: '試作用のエピソードなので、結末は1つだけ。手作業版と自動生成版の比較に使う。',
       debriefShotIds: [],
     },
   ],

@@ -31,7 +31,7 @@ import {
   type Stage,
 } from './config.mts';
 import { maxCostUsd, requireApiKey } from './env.mts';
-import { generateImage, generateVideo } from './gemini.mts';
+import { generateImage, generateVideo, looksBilling } from './gemini.mts';
 import { buildPlan, summarize, type Plan, type PlanItem } from './plan.mts';
 import { loadSpec, loadSpecs, writeSpec, type MediaSpec } from './spec.mts';
 import {
@@ -236,8 +236,11 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
   const fallbacks: string[] = [];
   let spent = 0;
   let made = 0;
+  /** 請求まわりで止まった場合、残りを試しても同じなので中断する */
+  let halted: string | null = null;
 
   for (const item of plan.items) {
+    if (halted) break;
     const reason = blockedReason(plan, item, picks);
     if (reason) {
       blocked.push(`${item.stage}/${item.itemId}（待ち：${reason}）`);
@@ -276,6 +279,7 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
         });
         if (result.blocked) blocked.push(`${item.stage}/${item.itemId}（${result.reason}）`);
         else failures.push({ item, reason: result.reason });
+        if (looksBilling(result.reason)) halted = result.reason;
         continue;
       }
 
@@ -358,6 +362,7 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
         });
         if (result.blocked) blocked.push(`${item.stage}/${item.itemId}（${result.reason}）`);
         else failures.push({ item, reason: result.reason });
+        if (looksBilling(result.reason)) halted = result.reason;
         continue;
       }
 
@@ -429,6 +434,12 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
     for (const failure of failures) {
       console.log(`    - ${failure.item.stage}/${failure.item.itemId}：${failure.reason}`);
     }
+  }
+  if (halted) {
+    console.log(
+      `\n  ● 請求・残高の問題で中断しました。残りは試していません（費用は発生していません）：\n    ${halted}`,
+    );
+    return;
   }
 
   console.log(`\n次は：npm run media -- review --episode ${episodeId} --serve`);

@@ -222,7 +222,7 @@ export const production: ProductionNotes = {
       imagePrompt: `日本の地方銀行支店の応接室。濃紺のスーツを着た40代後半の男性が歩いてきて、ファイルを机に置こうとしている。${STYLE}`,
       motionPrompt:
         '課長が数歩こちらへ歩いてきて、手に持ったファイルを机に置き、こちらを見て話す。',
-      cameraNote: `${FIRST_PERSON} 座っているこちらを課長が見下ろす角度。音声込みで書き出す（audioMode: embedded の検証）。`,
+      cameraNote: `${FIRST_PERSON} 座っているこちらを課長が見下ろす角度。声込みで書き出す。`,
       placeId: 'pl-reception',
       characterIds: ['ref-kacho'],
       soundNote: '革靴の足音と、紙の束が机に当たる音。',
@@ -231,17 +231,17 @@ export const production: ProductionNotes = {
       imagePrompt: `日本の地方銀行支店の応接室。ベージュの作業着を着た60代半ばの男性が机越しに深く頭を下げている。${STYLE}`,
       motionPrompt:
         '社長が頭を下げたまま数秒静止し、ゆっくり顔を上げてこちらを見る。言い終えたあとは動きを止める。',
-      cameraNote: `${FIRST_PERSON} 分岐の「間」を作るため、最後の2秒は静止。音声込み。`,
+      cameraNote: `${FIRST_PERSON} 分岐の「間」を作るため、最後の2秒は静止。声込みで書き出す。`,
       placeId: 'pl-reception',
       characterIds: ['ref-yamada'],
     },
     p3: {
       imagePrompt: `日本の地方銀行支店の応接室。濃紺のスーツの40代後半の男性が目を細めてこちらを見ている。夕方の斜めの光。${STYLE}`,
       motionPrompt: '課長が目を細め、わずかに身を乗り出してこちらを見つめる。',
-      cameraNote: `${FIRST_PERSON} **無音で書き出す**（audioMode: separate の検証。声と音はアプリ側）。`,
+      cameraNote: `${FIRST_PERSON} 問い詰める緊張感。声込みで書き出す。`,
       placeId: 'pl-reception',
       characterIds: ['ref-kacho'],
-      soundNote: '静かな室内の空気だけ。声は入れない。',
+      soundNote: '静かな室内。空調の低い音だけが背景にある。',
     },
   },
 };
