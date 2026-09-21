@@ -408,9 +408,10 @@ async function runGenerate(plan: Plan, args: Args): Promise<void> {
       console.log(`  ✓ ${path.relative(ROOT, output)}（${formatUsd(cost)}）`);
     }
 
-    // 最初のテイクは自動で採用にする（見比べたければ pick で変える）
+    // 最初のテイクは自動で採用する。--force で作り直したときも新しいテイクに移す
+    // （そうしないと、同じ実行の中で古いテイクが参照画像に使われてしまう）
     const picked = picks[item.stage]?.[item.itemId];
-    if (picked === undefined) {
+    if (picked === undefined || args.force) {
       await setPick(episodeId, item.stage, item.itemId, take);
       picks[item.stage] = { ...(picks[item.stage] ?? {}), [item.itemId]: take };
     }
