@@ -82,11 +82,15 @@ npm run build       # 型チェック＋本番ビルド
 
 ## 動画素材まわり
 
+動画は **Google Flow（Veo 3.1）で1本ずつ作ります。** プロンプトは Claude Code が脚本から用意します。
+
 ```bash
-npm run shotlist        # 脚本から docs/shotlist/<エピソードID>.md を生成
-npm run import-assets   # inbox/ に置いた手作業の素材を変換して public/assets/ へ
-npm run media -- help   # 脚本から動画までを Gemini API で生成する（下記）
+npm run shotlist        # 脚本から docs/shotlist/ と Flow制作シート docs/flow/<エピソードID>.md を生成
+npm run import-assets   # inbox/ に置いた動画・画像を変換して public/assets/ へ
 ```
+
+Flow制作シートは、人物の設定画（3方向）→ 場所 → キーフレーム → クリップの順に、
+Flow に貼るプロンプトと保存名を並べたものです。保存名どおりに `inbox/` へ置けば取り込めます。
 
 `import-assets` と `media` は ffmpeg を使います（`brew install ffmpeg`）。
 画像は WebP、動画は MP4 / H.264（720×1280・CRF26）に変換されます。
@@ -94,7 +98,9 @@ npm run media -- help   # 脚本から動画までを Gemini API で生成する
 
 **素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できます。**
 
-### 自動生成（`npm run media`）
+### 自動生成（`npm run media`・凍結中）
+
+運用では使っていません（比較のために残しています）。
 
 **お金がかかります。** 実行前に必ず見積もりが出て、確認を求められます。
 

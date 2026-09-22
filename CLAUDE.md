@@ -40,8 +40,9 @@ src/theme/          デザイン3案のテーマ定義と、適用するテー�
 src/prototypes.ts   4つのプロトタイプの一覧（公開状態は持たない）
 content/<名前>/     各プロトタイプのコンテンツ（エピソード・課題）と制作メモ
 scripts/            ショットリスト生成・素材取り込み
-scripts/media/      脚本から動画までの生成パイプライン（Gemini / Veo）
+scripts/media/      脚本から動画までの生成パイプライン（Gemini / Veo）。凍結中
 docs/shotlist/      エピソードごとのショットリスト（自動生成）
+docs/flow/          Flow制作シート。Flow に貼るプロンプトを作る順に並べたもの（自動生成）
 media/spec/         機械可読なショットリスト（自動生成）
 media/takes/        採用テイクの指定
 media/manifest/     生成ログ（使ったプロンプト・モデル・推定費用）
@@ -105,98 +106,134 @@ docs/asset-list.md  必要な素材の一覧
 ノベル型の体験は**分岐する縦型ショートドラマ**。縦画面いっぱいに動画を再生し、
 セリフは字幕としてアプリ側で重ねる（**動画に文字を焼き込まない**）。
 
-エピソードは `Shot` の並び。実装済みの見本は `content/novel-bank/bank-ep01.ts` にあるので、
-まずそれを読むこと。検証用の短いものは `content/novel-bank/pilot-01.ts`。
+体験の芯は2つ。**職業体験**（選択肢は実際の業務判断）と、
+**ドラマの世界に飛び込んだような没入感**（一人称・継ぎ目のない再生・UIを感じさせない選択）。
+
+### 作り方の分担
+
+| 工程 | 担当 | 中身 |
+| --- | --- | --- |
+| 企画・脚本 | Claude Code | ターンの構成、セリフ、選択肢、ゲージ、結末と点数帯 |
+| プロンプト設計 | Claude Code | `production.ts` を書き、`npm run shotlist` で **Flow制作シート**（`docs/flow/<ID>.md`）を出す |
+| 動画生成 | 開発者 | Google Flow（Veo 3.1）で、シートのプロンプトを1つずつ貼って作る |
+| 編集・組み込み | Claude Code | `inbox/` → `npm run import-assets`（縦720p・音量統一・WebP/MP4）、字幕の位置合わせ |
+| 公開 | Claude Code | build して push（Vercel） |
+
+### ターン制（新しく書くエピソードはこの形）
+
+見本は `content/novel-bank/pilot-02.ts`（3ターン・結末3段階）。まずそれを読むこと。
+
+```
+1ターン ＝ 本編1本 → 選択 → 分岐した反応1本
+
+  本編（K始点 → K問い）──[最後のコマで止めて選択]──┬─ 反応A（K問い → …）─┐
+                                                    └─ 反応B（K問い → …）─┴→ 次のターンの本編
+```
+
+- **本編**（`kind: 'story'`）は相手が問いを投げて終わる。`branch.atSec` は書かず、**最後のコマで止めたまま選択肢を出す**
+- **反応**（`kind: 'reaction'`）は、選択を出したコマ（キーフレーム）から始める。ここでゲージが動く
+- 反応A/Bは**同じショットに合流させる**。最後のターンは `next: SCORE_ENDING` で点数の結末へ
+- 1ターンで作る動画は3本、プレイヤーが見るのは2本（16〜20秒）
+
+#### キーフレーム（Flow の Frames to Video）
+
+始点・終点に使う静止画を `production.ts` の `keyframes` に書き、ショットの制作メモから
+`startFrame` / `endFrame` で指す。**本編の終点＝反応2本の始点**にすると、分岐しても継ぎ目が出ない。
+キーフレームの素材IDはそのショットの `imageAssetId` にもする（動画が無いときの代替表示になる）。
+
+#### 尺
+
+Flow の1クリップは**8秒か10秒**で、生成してみるまでどちらか分からない。
+
+- **動画があれば、アプリは動画の実際の長さで進む**。`durationSec` は動画が無いときの尺
+- 字幕は**8秒に収まる位置**に置く（10秒で出てきても困らない）
+- 取り込み時に実際の長さが出るので、ずれが大きければ字幕の `atSec` を直す
+
+#### 結末は点数で決める
+
+成功／失敗の二択にしない。**ゲージの合計点に応じて、段階のある結末**を用意する。
+
+```ts
+next: SCORE_ENDING,                 // 最後の反応ショット（import { SCORE_ENDING } from '../../src/types'）
+
+endings: [
+  { id: 'ending-high', shotId: 'e-high', type: '根拠で語れる新人', minScore: 6, ... },
+  { id: 'ending-mid',  shotId: 'e-mid',  type: '伸びしろのある新人', minScore: 2, ... },
+  { id: 'ending-low',  shotId: 'e-low',  type: '気持ちが先に立つ新人', minScore: -Infinity, ... },
+]
+```
+
+- `minScore` 以上の結末のうち一番高いものが選ばれる。**最下位は `-Infinity`**
+- 合計に使うゲージを絞るなら `scoreGauges: ['trust', 'result']`
+- Flow制作シートの末尾に「取りうる点数」と「各結末に届く選び方の数」が出る。偏りすぎていたら効果量か点数帯を直す
+- **どの選び方でも届かない結末があると、`npm run shotlist` が止まる**
+
+### フィールド
 
 | フィールド | 何ができるか | 書き方 |
 | --- | --- | --- |
-| `durationSec` | ショットの尺 | 秒。**素材が無くてもこの尺で進む**ので、間の設計はここで決まる |
+| `durationSec` | 動画が無いときの尺 | 秒。**動画があれば動画の実際の長さが優先**。10秒以下 |
 | `videoAssetId` | 動画 | 素材ID。無ければ `imageAssetId`、それも無ければ絵コンテ風に落ちる |
-| `imageAssetId` | 動画が無いときの静止画 | 素材ID。ゆっくりズームして見せる |
-| `audioMode` | 音声方式 | `'embedded'`（動画に音声込み）／`'separate'`（無音動画＋アプリ側の音） |
+| `imageAssetId` | 動画が無いときの静止画 | 素材ID。ターン制では始点のキーフレームIDを入れる |
+| `audioMode` | 音声方式 | `'embedded'`（動画に声込み。既定）／`'separate'`（無音動画＋アプリ側の音） |
 | `subtitles` | 字幕 | `[{ speaker?, text, atSec, durationSec?, terms? }]` |
-| `telop` | 時刻と場所 | `{ time: '9:02', place: '港南支店 融資課' }` |
+| `telop` | 時刻と場所 | `{ time: '17:40', place: '港南支店 応接室' }` |
 | `interrupt` | チャット・メール・電話の割り込み | `{ kind, from, body, atSec? }`。出ているあいだ再生が止まる |
 | `sound` | BGM・効果音 | `{ bgm?, se?, stopBgm? }`（`audioMode: 'separate'` のとき使う） |
-| `next` | 次のショット | ショットID |
-| `branch` | 分岐 | 下の例を参照。あれば `next` より優先される |
+| `next` | 次のショット | ショットID、または `SCORE_ENDING` |
+| `branch` | 分岐 | `{ timeLimitSec?, onTimeout, choices: [A, B] }`。あれば `next` より優先 |
 | `kind` | ショットの種類 | `'story'` / `'reaction'` / `'ending'` / `'debrief'` |
-
-### 書き方の例
-
-```ts
-{
-  id: 's05-ask',
-  kind: 'story',
-  durationSec: 10,
-  videoAssetId: 'v-s05-ask',
-  imageAssetId: 'i-s05-ask',
-  subtitles: [
-    { speaker: '山田社長', text: '3,000万、なんとかならないか。', atSec: 3.4 },
-  ],
-  branch: {
-    atSec: 7.5,            // ここで動画が止まり、選択肢が出る
-    timeLimitSec: 10,
-    onTimeout: { label: '答えられなかった', nextShotId: 's06b-silence',
-                 effects: [{ key: 'trust', delta: -1 }] },
-    choices: [
-      { label: 'お任せください', nextShotId: 's06b-silence',
-        effects: [{ key: 'trust', delta: 1 }, { key: 'result', delta: -2 }] },
-      { label: '使いみちを教えて', nextShotId: 's06a-listen',
-        effects: [{ key: 'trust', delta: 2 }, { key: 'result', delta: 2 }] },
-    ],
-  },
-}
-```
 
 ### 分岐は「一度分かれて合流する」形にする
 
 **必ず合流させること。** 合流しないと、分岐のたびに必要なクリップ数が倍に増える。
 
-- 合流しない場合：分岐2回で終端が4通り。その先のショットを全部作り直すことになる
+- 合流しない場合：分岐3回で終端が8通り。その先のショットを全部作り直すことになる
 - 合流する場合：分岐1回で増えるのは**反応ショット2本だけ**。本筋は1本で済む
 
 手作業で動画を生成する以上、クリップ数がそのまま作業量になる。
-物語の差は「反応ショット」と「ゲージの動き」、そして最後の結末で付ける。
+物語の差は「反応ショット」と「ゲージの動き」、そして点数で決まる結末で付ける。
+字幕やチャットの割り込みを選択に応じて変える工夫は、動画を増やさずに差を出せる。
 
 ### 守ること
 
-- **1ショットは8秒以下**。動画生成（Veo）が一度に作れるのが8秒までなので、
-  延長機能は使わず脚本側で割る。ショートドラマはカットが速いほうが合う
-  （生成の尺は 4 / 6 / 8 秒のどれかに丸められるので、その3つに合わせると無駄が出ない）
+- **1ショットは10秒以下**。Flow の1クリップ（8秒か10秒）を超えるショットは脚本側で割る（延長は使わない）
 - **選択肢は常に2択。ラベルは10文字以内**（スマホで1行に収めるため）
+- 選択肢は**自分が言うセリフ・取る行動**として書く。正解探しではなく「プロならどう考えるか」を問う
 - `branch` には `onTimeout` を必ず書く。黙っていた結果もドラマとして描く
-- 選択の直後は `kind: 'reaction'` のショットにする。ここでゲージが動いて手応えが返る
+- 重い判断は制限時間を長く、軽いやり取りは短く（10秒ごとの反射ゲームにしない）
 - **一人称視点。主人公（プレイヤー＝新人）は画面に映さない。** 手元・相手の顔・書類で見せる
 - 1話は**1〜2分**。タイトル画面は作らない（最初のタップで即本編）
 - 字幕は**短く1行**（目安24文字）。長い説明は書かず、場面で見せる
-- 答え合わせ（`kind: 'debrief'`）は先輩キャラの短いショットで行う
-- 結末は複数用意し、`EndingCard` にタイプ診断の名前と説明を書く
-  （結果カードで「エンディング n/m」の回収状況が出る）
-- 答え合わせショットは複数の結末で使い回してよい
+- 結末は複数用意し、`EndingCard` にタイプ診断の名前と説明を書く（結果カードに点数と「エンディング n/m」が出る）
+- 答え合わせ（`kind: 'debrief'`）は先輩キャラの短いショットで行う。複数の結末で使い回してよい
 
 これらは `npm run shotlist` が検査する。破っているとショットリストが生成されない。
+ターン制では、**分岐先の始点が選択のコマと同じか**、**反応が合流しているか**、
+**各結末に届く選び方があるか**も検査する。
 
-### 素材の作り方
+### 素材の作り方（Google Flow）
 
-1. 脚本（`content/<名前>/episodes.ts`）と制作メモ（同 `production.ts`）を書く
-2. `npm run shotlist` → `docs/shotlist/<エピソードID>.md` ができる
-3. 素材を作る。**自動生成（`npm run media`、下の節）か、手作業（ChatGPT + Google Flow）**
-4. 手作業の場合は、できたファイルを `inbox/` に置いて `npm run import-assets`
-   （WebP / MP4 に変換され、`public/assets/<名前>/` に入る）
+1. 脚本（`content/<名前>/<エピソード>.ts`）と制作メモ（同 `production.ts`）を書く
+2. `npm run shotlist` → `docs/flow/<エピソードID>.md`（Flow制作シート）ができる
+3. シートを上から順に Flow で作る：**人物の設定画（正面・斜め45度・真横）→ 場所 → キーフレーム → クリップ**
+4. **保存名どおりの名前**で `inbox/` に置き、`npm run import-assets`
+   （縦720p・音量をそろえて `public/assets/<名前>/` に入る。実際の尺と、横長だった場合の警告が出る）
+5. もう一度 `npm run shotlist` を実行すると、シートの ✅ と進み具合が更新される
 
 **素材が1本も無くても、絵コンテ風の代替表示で最後まで再生できる。**
 先に脚本と尺を固め、素材はあとから差し替えていく。
 
-制作メモ（`production.ts`）は3つに分かれている。
-**エクスポート名 `production` と、この3つのキーは変えないこと。**
+制作メモ（`production.ts`）の構成。**エクスポート名 `production` とキーは変えないこと。**
 
 | キー | 中身 |
 | --- | --- |
-| `characters` | 登場人物。`id`（設定画の素材ID）・`name`・`appearance`（見た目）・`expressions`（表情違い） |
+| `characters` | 登場人物。`id`（設定画の素材ID）・`name`・`appearance`（見た目）・`angles`（設定画の向き。既定は3方向） |
 | `places` | 場所。`id`・`name`・`prompt`（人物なしの背景プロンプト） |
-| `shots` | ショットID → `imagePrompt` / `motionPrompt` / `cameraNote` / `placeId` / `characterIds` / `soundNote` |
+| `keyframes` | Frames to Video の始点・終点。`id`・`name`・`prompt`・`placeId`・`characterIds` |
+| `shots` | ショットID → `motionPrompt` / `cameraNote` / `placeId` / `characterIds` / `soundNote` / `startFrame` / `endFrame`（キーフレームを使わないショットは `imagePrompt`） |
 
+セリフは字幕から自動でプロンプトに入るので、`motionPrompt` には動きと芝居だけを書く。
 同じ人物が出るショットでは `characterIds` に同じ設定画IDを書き、**見た目を揃える**こと。
 
 ### 音声方式の使い分け
@@ -206,7 +243,7 @@ docs/asset-list.md  必要な素材の一覧
 | `'embedded'`（既定） | 人物がしゃべるショット | 口の動きと合うが、差し替えのたびに動画を作り直す |
 | `'separate'` | 風景・手元など、声の無いショット | 無音で取り込み、`sound` でBGMと効果音を足す |
 
-どちらが扱いやすいかは `pilot-01`（試作用エピソード）で確かめられる。
+**音声は動画生成で声ごと作る方針**（既定の `'embedded'`）。`'separate'` は声の無いショットだけ。
 **音は最初のタップまで鳴らない**（iOSの自動再生制限）。音だけで伝わる情報は書かない。
 
 ### 見た目（テーマ）
@@ -217,6 +254,9 @@ docs/asset-list.md  必要な素材の一覧
 
 
 ## メディアパイプライン（`npm run media`）
+
+> **凍結中。** 動画は Google Flow で開発者が作る方針に決めたので、運用では使わない。
+> コードと試作の記録（`media/`）は比較のために残してある。
 
 脚本から動画までを Gemini API で作る。**お金がかかるので、必ず見積もりを見てから実行する。**
 
