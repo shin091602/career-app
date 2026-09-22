@@ -34,7 +34,47 @@ interface Wanted {
   shotId: string;
   /** そのショットの音声方式（動画のときに参考にする） */
   audioMode: string;
+  /** そのショットで想定している尺（取り込んだ動画の長さと比べる） */
+  durationSec: number;
   done: boolean;
+}
+
+/** 1ショットの上限。Flow の1クリップ（8秒か10秒）に合わせる */
+const SHOT_MAX_SEC = 10;
+
+interface Probe {
+  width: number;
+  height: number;
+  duration: number;
+}
+
+/** 解像度と長さを調べる（ffprobe） */
+function probe(file: string): Probe | null {
+  const result = spawnSync(
+    'ffprobe',
+    [
+      '-v', 'error',
+      '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height:format=duration',
+      '-of', 'json',
+      file,
+    ],
+    { encoding: 'utf8' },
+  );
+  if (result.status !== 0) return null;
+  try {
+    const data = JSON.parse(result.stdout) as {
+      streams?: { width?: number; height?: number }[];
+      format?: { duration?: string };
+    };
+    return {
+      width: data.streams?.[0]?.width ?? 0,
+      height: data.streams?.[0]?.height ?? 0,
+      duration: Number(data.format?.duration ?? 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function hasFfmpeg(): boolean {
@@ -57,6 +97,7 @@ async function collectWanted(): Promise<Wanted[]> {
             prototypeId,
             shotId: shot.id,
             audioMode,
+            durationSec: shot.durationSec,
             done: assetExists(prototypeId, shot.videoAssetId, 'mp4'),
           });
         }
@@ -67,6 +108,7 @@ async function collectWanted(): Promise<Wanted[]> {
             prototypeId,
             shotId: shot.id,
             audioMode,
+            durationSec: shot.durationSec,
             done: assetExists(prototypeId, shot.imageAssetId, 'webp'),
           });
         }
@@ -96,7 +138,10 @@ function convertImage(input: string, output: string): boolean {
 }
 
 function convertVideo(input: string, output: string, mute: boolean): boolean {
-  const audio = mute ? ['-an'] : ['-c:a', 'aac', '-b:a', '96k'];
+  // クリップごとに声の大きさがばらつくので、音量をそろえる（loudnorm）
+  const audio = mute
+    ? ['-an']
+    : ['-af', 'loudnorm=I=-16:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '96k'];
   return run([
     '-i', input,
     // 縦画面 720×1280 相当に収める。奇数サイズを避けるため -2 を使う
@@ -213,6 +258,14 @@ async function main() {
     }
 
     console.log(`- ${name} → ${path.relative(ROOT, output)}${mute ? '（音声なし）' : ''}`);
+
+    const source = kind === 'video' ? probe(input) : null;
+    if (source && source.width > source.height) {
+      console.log(
+        `  ※横長の動画です（${source.width}×${source.height}）。アプリは縦画面なので左右が切れます。` +
+          'Flow で縦 9:16 を選んで作り直すのがおすすめです',
+      );
+    }
     const ok =
       kind === 'image' ? convertImage(input, output) : convertVideo(input, output, mute);
     if (!ok) {
@@ -222,7 +275,16 @@ async function main() {
 
     const { size } = await stat(output);
     const limit = kind === 'image' ? WARN_BYTES.image : WARN_BYTES.video;
-    console.log(`  → ${formatBytes(size)}${size > limit ? '  ※目安より大きいです' : ''}`);
+    // 動画は実際の長さを出す（アプリは実際の長さで進むので、字幕の位置を見直す目安になる）
+    const length = source
+      ? `／${source.duration.toFixed(1)}秒（脚本の想定 ${target.durationSec} 秒）`
+      : '';
+    console.log(
+      `  → ${formatBytes(size)}${length}${size > limit ? '  ※目安より大きいです' : ''}`,
+    );
+    if (source && source.duration > SHOT_MAX_SEC + 0.5) {
+      console.log(`  ※${SHOT_MAX_SEC}秒を超えています。脚本側でショットを分けてください`);
+    }
 
     await mkdir(DONE, { recursive: true });
     await rename(input, path.join(DONE, name));

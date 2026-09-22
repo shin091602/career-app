@@ -15,6 +15,7 @@ import path from 'node:path';
 import type { Episode, PrototypeId, ProductionNotes, Shot } from '../src/types/index.ts';
 import { ROOT, NOVEL_PROTOTYPES, assetExists, audioModeOf, loadPrototype, nextIdsOf } from './episodes.mts';
 import { validateEpisode } from './validate-episode.mts';
+import { renderFlowSheet, usesKeyframes } from './build-flowsheet.mts';
 
 const KIND_LABEL: Record<Shot['kind'], string> = {
   story: '本編',
@@ -234,6 +235,13 @@ async function main() {
         file: path.join(ROOT, 'docs', 'shotlist', `${episode.id}.md`),
         body: renderEpisode(prototypeId, episode, production),
       });
+      // Flow で作るエピソードは、貼り付け用の制作シートも出す
+      if (usesKeyframes(episode, production)) {
+        outputs.push({
+          file: path.join(ROOT, 'docs', 'flow', `${episode.id}.md`),
+          body: renderFlowSheet(prototypeId, episode, production),
+        });
+      }
     }
   }
 
@@ -244,6 +252,7 @@ async function main() {
   }
 
   await mkdir(path.join(ROOT, 'docs', 'shotlist'), { recursive: true });
+  await mkdir(path.join(ROOT, 'docs', 'flow'), { recursive: true });
   for (const output of outputs) {
     await writeFile(output.file, output.body, 'utf8');
     written.push(path.relative(ROOT, output.file));
