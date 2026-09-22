@@ -8,6 +8,7 @@ import type {
   Shot,
   TimeoutOutcome,
 } from '../../types';
+import { SCORE_ENDING, endingForScore, scoreOf } from '../../types';
 import { usePersistentState } from '../../lib/usePersistentState';
 
 /** 字幕ログの1行 */
@@ -70,6 +71,8 @@ export interface EpisodeState {
   resultOpen: boolean;
   /** これまでに見た結末のID（周回をまたいで残る） */
   collectedEndingIds: string[];
+  /** 結末を決める点数（ゲージの合計） */
+  score: number;
   /** ショットが終わったときに進む */
   advance: () => void;
   pick: (choice: Choice) => void;
@@ -157,23 +160,38 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
     });
   }, [currentId, shot, setProgress]);
 
+  /** SCORE_ENDING なら、その時点のゲージで結末のショットに置き換える */
+  const resolveTarget = useCallback(
+    (nextShotId: string, gauges: Record<string, number>): string => {
+      if (nextShotId !== SCORE_ENDING) return nextShotId;
+      const ending = endingForScore(episode, scoreOf(episode, gauges));
+      if (!ending) throw new Error(`${episode.id}: 点数で選ぶ結末（minScore）がありません`);
+      return ending.shotId;
+    },
+    [episode],
+  );
+
   const goTo = useCallback(
     (nextShotId: string, effects?: GaugeEffect[], pickedLabel?: string) => {
-      setProgress((prev) => ({
-        ...prev,
-        shotId: nextShotId,
-        history: [...prev.history, prev.shotId],
-        gauges: applyEffects(prev.gauges, effects),
-        resultOpen: false,
-        log: pickedLabel
-          ? [
-              ...(prev.log ?? []),
-              { shotId: prev.shotId, kind: 'choice' as const, text: pickedLabel },
-            ].slice(-LOG_LIMIT)
-          : (prev.log ?? []),
-      }));
+      setProgress((prev) => {
+        // 選択の効果を足してから行き先を決める（最後の選択も点数に入れるため）
+        const gauges = applyEffects(prev.gauges, effects);
+        return {
+          ...prev,
+          shotId: resolveTarget(nextShotId, gauges),
+          history: [...prev.history, prev.shotId],
+          gauges,
+          resultOpen: false,
+          log: pickedLabel
+            ? [
+                ...(prev.log ?? []),
+                { shotId: prev.shotId, kind: 'choice' as const, text: pickedLabel },
+              ].slice(-LOG_LIMIT)
+            : (prev.log ?? []),
+        };
+      });
     },
-    [setProgress],
+    [setProgress, resolveTarget],
   );
 
   const advance = useCallback(() => {
@@ -209,21 +227,33 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
   /** 次に再生されうるショット（分岐なら両方）を先読みの対象にする */
   const upcoming = useMemo(() => {
     const ids: string[] = [];
+    const gauges = progress.gauges;
     if (shot.branch) {
-      ids.push(shot.branch.choices[0].nextShotId, shot.branch.choices[1].nextShotId);
-      ids.push(shot.branch.onTimeout.nextShotId);
+      // 点数で結末が決まる場合は、選んだときの効果込みで行き先を予想する
+      for (const option of [...shot.branch.choices, shot.branch.onTimeout]) {
+        ids.push(resolveTarget(option.nextShotId, applyEffects(gauges, option.effects)));
+      }
     } else if (endingShot) {
       if (endingShot.debriefShotIds[0]) ids.push(endingShot.debriefShotIds[0]);
     } else if (reachedEnding && debriefIndex >= 0) {
       const next = reachedEnding.debriefShotIds[debriefIndex + 1];
       if (next) ids.push(next);
     } else if (shot.next) {
-      ids.push(shot.next);
+      ids.push(resolveTarget(shot.next, gauges));
     }
 
     const unique = [...new Set(ids)].filter((id) => id !== currentId);
     return unique.map((id) => shotMap.get(id)).filter((s): s is Shot => Boolean(s));
-  }, [shot, endingShot, reachedEnding, debriefIndex, currentId, shotMap]);
+  }, [
+    shot,
+    endingShot,
+    reachedEnding,
+    debriefIndex,
+    currentId,
+    shotMap,
+    progress.gauges,
+    resolveTarget,
+  ]);
 
   return {
     shot,
@@ -232,6 +262,7 @@ export function useEpisodeState(episode: Episode, prototypeId: PrototypeId): Epi
     ending,
     resultOpen: progress.resultOpen,
     collectedEndingIds,
+    score: scoreOf(episode, progress.gauges),
     advance,
     pick,
     timeout,

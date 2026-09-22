@@ -1,8 +1,11 @@
 import type { EndingCard, Episode, GaugeDef } from '../../types';
+import { scoreEndings } from '../../types';
 
 interface ResultCardProps {
   episode: Episode;
   ending: EndingCard;
+  /** 結末を決めた点数（ゲージの合計） */
+  score: number;
   gauges: GaugeDef[];
   values: Record<string, number>;
   /** これまでに見た結末のID */
@@ -17,6 +20,7 @@ interface ResultCardProps {
 export function ResultCard({
   episode,
   ending,
+  score,
   gauges,
   values,
   collectedEndingIds,
@@ -24,6 +28,13 @@ export function ResultCard({
 }: ResultCardProps) {
   const total = episode.endings.length;
   const collected = episode.endings.filter((item) => collectedEndingIds.includes(item.id)).length;
+  // 点数で結末が決まるエピソードでは、どの点数帯だったかを見せる
+  const tiers = scoreEndings(episode);
+  const byScore = tiers.some((tier) => tier.id === ending.id);
+  // 一覧は点数帯の高い順、そのあとに経路で決まる結末
+  const listed = byScore
+    ? [...[...tiers].reverse(), ...episode.endings.filter((item) => !tiers.includes(item))]
+    : episode.endings;
 
   return (
     <div
@@ -55,6 +66,12 @@ export function ResultCard({
             {ending.type}
           </h2>
           <p className="mt-3 text-sm leading-relaxed">{ending.summary}</p>
+          {byScore && (
+            <p className="mt-3 text-xs tabular-nums" style={{ color: 'var(--c-text-muted)' }}>
+              点数 {score}
+              {ending.minScore !== undefined && `（${ending.minScore}点以上の結末）`}
+            </p>
+          )}
         </div>
 
         <section>
@@ -79,18 +96,26 @@ export function ResultCard({
             エンディング {collected} / {total}
           </p>
           <ul className="mt-2 space-y-1">
-            {episode.endings.map((item) => {
+            {listed.map((item) => {
               const seen = collectedEndingIds.includes(item.id);
+              const band =
+                byScore && item.minScore !== undefined ? `（${item.minScore}点〜）` : '';
               return (
-                <li key={item.id} className="text-sm text-white/85">
-                  {seen ? `✓ ${item.type}` : '✗ ？？？'}
+                <li
+                  key={item.id}
+                  className="flex justify-between gap-2 text-sm text-white/85 tabular-nums"
+                >
+                  <span>{seen ? `✓ ${item.type}` : '✗ ？？？'}</span>
+                  <span className="text-white/60">{band}</span>
                 </li>
               );
             })}
           </ul>
           {collected < total && (
             <p className="mt-2 text-[11px] text-white/70">
-              別の選択をすると、違う結末が見られます。
+              {byScore
+                ? '選択の積み重ねで点数が変わり、結末も変わります。'
+                : '別の選択をすると、違う結末が見られます。'}
             </p>
           )}
         </section>

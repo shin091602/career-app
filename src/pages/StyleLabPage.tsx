@@ -172,6 +172,7 @@ export function StyleLabPage() {
             <ResultCard
               episode={SAMPLE_EPISODE}
               ending={SAMPLE_ENDING}
+              score={3}
               gauges={SAMPLE_GAUGES}
               values={{ trust: 2, result: 1 }}
               collectedEndingIds={['ending-carry']}

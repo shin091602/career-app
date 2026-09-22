@@ -38,10 +38,16 @@ export interface Subtitle {
   terms?: Term[];
 }
 
+/**
+ * 次のショットIDの代わりに書くと、**ゲージの合計点で結末を選ぶ**。
+ * どの結末に行くかは EndingCard の minScore で決まる。
+ */
+export const SCORE_ENDING = '@ending';
+
 /** 選択肢。ラベルは10文字以内 */
 export interface Choice {
   label: string;
-  /** 選んだあとに再生するショット（ふつうは反応ショット） */
+  /** 選んだあとに再生するショット（ふつうは反応ショット）。SCORE_ENDING も書ける */
   nextShotId: string;
   effects?: GaugeEffect[];
 }
@@ -105,7 +111,10 @@ export type ShotKind = 'story' | 'reaction' | 'ending' | 'debrief';
 export interface Shot {
   id: string;
   kind: ShotKind;
-  /** 尺（秒）。動画が無いときも、この尺で絵コンテ／静止画が進む */
+  /**
+   * 尺（秒）。**動画があれば動画の実際の長さが優先される**（Flow は8秒か10秒かが
+   * 生成してみるまで決まらないため）。動画が無いときは、この尺で絵コンテ／静止画が進む
+   */
   durationSec: number;
   /** 動画の素材ID（縦 720×1280 目安のMP4） */
   videoAssetId?: AssetId;
@@ -117,7 +126,7 @@ export interface Shot {
   telop?: Telop;
   interrupt?: Interrupt;
   sound?: ShotSound;
-  /** 終わったら進む次のショット */
+  /** 終わったら進む次のショット。SCORE_ENDING なら点数で結末を選ぶ */
   next?: string;
   /** 分岐。あれば next より優先される */
   branch?: Branch;
@@ -134,6 +143,12 @@ export interface EndingCard {
   summary: string;
   /** 結末のあとに見せる答え合わせショット（kind: 'debrief'） */
   debriefShotIds: string[];
+  /**
+   * この点数以上で到達する。**SCORE_ENDING で選ぶ結末には必ず書く**。
+   * 条件を満たす結末のうち、いちばん高い minScore のものが選ばれ、
+   * どれにも届かなければ最下位（minScore が一番低いもの）になる
+   */
+  minScore?: number;
 }
 
 export interface Episode extends VerifiableMeta {
@@ -150,6 +165,34 @@ export interface Episode extends VerifiableMeta {
   shots: Shot[];
   gauges: GaugeDef[];
   endings: EndingCard[];
+  /** 結末の点数に使うゲージ。省略時はすべてのゲージの合計 */
+  scoreGauges?: string[];
+}
+
+/** 結末を決める点数（ゲージの合計） */
+export function scoreOf(episode: Episode, gauges: Record<string, number>): number {
+  const keys = episode.scoreGauges ?? episode.gauges.map((gauge) => gauge.key);
+  return keys.reduce((sum, key) => sum + (gauges[key] ?? 0), 0);
+}
+
+/** 点数で選ぶ結末（minScore を持つもの）を、低い順に並べて返す */
+export function scoreEndings(episode: Episode): EndingCard[] {
+  return episode.endings
+    .filter((ending) => ending.minScore !== undefined)
+    .sort((a, b) => (a.minScore ?? 0) - (b.minScore ?? 0));
+}
+
+/**
+ * 点数に応じた結末を返す（SCORE_ENDING の行き先）。
+ * minScore 以上の結末のうち一番高いもの。どれにも届かなければ最下位の結末。
+ */
+export function endingForScore(episode: Episode, score: number): EndingCard | undefined {
+  const candidates = scoreEndings(episode);
+  let chosen = candidates[0];
+  for (const ending of candidates) {
+    if ((ending.minScore ?? 0) <= score) chosen = ending;
+  }
+  return chosen;
 }
 
 /** ショットの実効的な音声方式を返す */

@@ -1,19 +1,30 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
+export interface ShotClock {
+  /** ショット内の経過秒 */
+  elapsed: number;
+  /**
+   * このショットの実効的な尺。
+   * 動画が読み込めていれば**動画の実際の長さ**、無ければデータの durationSec。
+   * Flow の出力は8秒か10秒かが生成してみるまで決まらないので、実物を優先する。
+   */
+  duration: number;
+}
+
 /**
  * ショット内の経過秒。
  *
  * 動画が再生できているときは動画の再生位置を、
  * 動画が無い（絵コンテ・静止画の）ときは実時間を使う。
- * どちらでも「尺どおりに進む」ので、素材の有無で間が変わらない。
  */
 export function useShotClock(
   shotId: string,
   durationSec: number,
   running: boolean,
   videoRef: RefObject<HTMLVideoElement | null>,
-): number {
+): ShotClock {
   const [elapsed, setElapsed] = useState(0);
+  const [mediaDuration, setMediaDuration] = useState<number | null>(null);
   const startedAtRef = useRef(0);
   const accumulatedRef = useRef(0);
 
@@ -21,6 +32,7 @@ export function useShotClock(
   useEffect(() => {
     accumulatedRef.current = 0;
     setElapsed(0);
+    setMediaDuration(null);
   }, [shotId]);
 
   useEffect(() => {
@@ -33,6 +45,9 @@ export function useShotClock(
       const video = videoRef.current;
       if (video && video.readyState > 0 && !Number.isNaN(video.currentTime)) {
         setElapsed(video.currentTime);
+        if (Number.isFinite(video.duration) && video.duration > 0) {
+          setMediaDuration((prev) => (prev === video.duration ? prev : video.duration));
+        }
       } else {
         const wall = (performance.now() - startedAtRef.current) / 1000;
         setElapsed(Math.min(accumulatedRef.current + wall, durationSec));
@@ -48,5 +63,5 @@ export function useShotClock(
     };
   }, [shotId, durationSec, running, videoRef]);
 
-  return elapsed;
+  return { elapsed, duration: mediaDuration ?? durationSec };
 }

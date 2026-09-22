@@ -17,6 +17,9 @@ import { ChoiceOverlay } from './ChoiceOverlay';
 import { GaugeBar } from './GaugeBar';
 import { ResultCard } from './ResultCard';
 
+/** 動画の終端の判定に持たせる余裕（currentTime が duration にぴったり届かないことがある） */
+const END_EPSILON_SEC = 0.05;
+
 export interface EpisodePlayerProps {
   episode: Episode;
   prototypeId: PrototypeId;
@@ -43,21 +46,31 @@ export function EpisodePlayer({ episode, prototypeId }: EpisodePlayerProps) {
     setInterruptDone(false);
   }, [shot.id]);
 
-  // 割り込みと分岐が出たら再生を止める。
-  // 時計の値からゲートを決め、ゲートが開いているあいだは時計も止める。
-  const branchAt = shot.branch ? (shot.branch.atSec ?? shot.durationSec) : null;
-  const interruptAt = shot.interrupt ? (shot.interrupt.atSec ?? 0) : null;
   const [gate, setGate] = useState<'none' | 'interrupt' | 'branch'>('none');
 
   const blocked = paused || logOpen || state.resultOpen || gate !== 'none';
   const running = started && !blocked;
 
-  const elapsed = useShotClock(shot.id, shot.durationSec, running, videoRef);
+  // 動画があれば動画の実際の長さで進む（Flow の出力は8秒か10秒か決まっていない）
+  const { elapsed, duration } = useShotClock(shot.id, shot.durationSec, running, videoRef);
+
+  // 割り込みと分岐が出たら再生を止める。
+  // 時計の値からゲートを決め、ゲートが開いているあいだは時計も止める。
+  // 分岐の atSec を省くとショットの終わりで出る（最後のコマで止まったまま選ぶ）
+  const branchAt = shot.branch ? Math.min(shot.branch.atSec ?? duration, duration) : null;
+  const interruptAt = shot.interrupt ? (shot.interrupt.atSec ?? 0) : null;
+
+  // ショットが変わったらゲートを閉じる
+  useEffect(() => {
+    setGate('none');
+  }, [shot.id]);
 
   useEffect(() => {
     if (interruptAt !== null && !interruptDone && elapsed >= interruptAt) setGate('interrupt');
-    else if (branchAt !== null && elapsed >= branchAt) setGate('branch');
-    else setGate('none');
+    else if (branchAt !== null && elapsed >= branchAt - END_EPSILON_SEC) setGate('branch');
+    // 一度開いた選択肢は、そのショットのあいだ閉じない
+    // （閉じると、終わった動画が頭から再生し直されてしまう）
+    else setGate((prev) => (prev === 'branch' ? prev : 'none'));
   }, [elapsed, interruptAt, interruptDone, branchAt]);
 
   const interruptOpen = gate === 'interrupt';
@@ -90,15 +103,20 @@ export function EpisodePlayer({ episode, prototypeId }: EpisodePlayerProps) {
   }, [shot.id]);
 
   const handleEnded = useCallback(() => {
+    // 分岐のあるショットは、終わっても選択肢を出して待つ
+    if (shot.branch) {
+      setGate('branch');
+      return;
+    }
     if (advancedRef.current === shot.id) return;
     advancedRef.current = shot.id;
     state.advance();
-  }, [shot.id, state]);
+  }, [shot.id, shot.branch, state]);
 
   useEffect(() => {
     if (!running || branchAt !== null) return;
-    if (elapsed >= shot.durationSec) handleEnded();
-  }, [running, elapsed, shot.durationSec, branchAt, handleEnded]);
+    if (elapsed >= duration - END_EPSILON_SEC) handleEnded();
+  }, [running, elapsed, duration, branchAt, handleEnded]);
 
   // 制限時間は選択肢が出ているあいだだけ進む
   const timer = useChoiceTimer(
@@ -180,6 +198,7 @@ export function EpisodePlayer({ episode, prototypeId }: EpisodePlayerProps) {
         <ResultCard
           episode={episode}
           ending={state.ending}
+          score={state.score}
           gauges={episode.gauges}
           values={state.progress.gauges}
           collectedEndingIds={state.collectedEndingIds}
