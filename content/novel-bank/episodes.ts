@@ -1,6 +1,7 @@
 import type { Episode } from '../../src/types';
 import { bankEpisode01 } from './bank-ep01';
 import { pilotEpisode } from './pilot-01';
+import { pilotEpisode02 } from './pilot-02';
 
 /**
  * 銀行員編のショートドラマ。
@@ -9,4 +10,4 @@ import { pilotEpisode } from './pilot-01';
  *
  * エクスポート名 `episodes` はノベル型プロトタイプで共通なので変更しないこと。
  */
-export const episodes: Episode[] = [bankEpisode01, pilotEpisode];
+export const episodes: Episode[] = [bankEpisode01, pilotEpisode, pilotEpisode02];

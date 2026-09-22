@@ -1,4 +1,5 @@
-import type { Episode, PrototypeId, ProductionNotes } from '../src/types/index.ts';
+import type { Episode, GaugeEffect, PrototypeId, ProductionNotes } from '../src/types/index.ts';
+import { SCORE_ENDING, endingForScore, scoreEndings } from '../src/types/index.ts';
 import { nextIdsOf } from './episodes.mts';
 
 /** 選択肢のラベルの上限（スマホで1行に収めるため） */
@@ -6,10 +7,94 @@ const CHOICE_LABEL_MAX = 10;
 
 /**
  * 1ショットの上限（秒）。
- * 動画生成（Veo）が一度に作れるのが8秒までで、延長は使わず脚本側で割る方針。
- * ショートドラマはカットが速いほうが合うので、8秒を超えるショットは分割する。
+ * 動画は Google Flow（Veo 3.1）で1クリップずつ作る。Flow の1クリップは8秒か10秒なので、
+ * それを超えるショットは脚本側で分割する（延長機能は使わない）。
  */
-const SHOT_MAX_SEC = 8;
+const SHOT_MAX_SEC = 10;
+
+/**
+ * 点数で結末が決まるエピソードで、SCORE_ENDING に着いたときに取りうる点数の一覧。
+ * SCORE_ENDING を使っていなければ null。
+ * 分岐は合流させる前提なので、ショットごとに「ここから先で足されうる点数」を覚えておけば
+ * 経路を全部たどらなくても求まる。
+ */
+export function reachableScores(episode: Episode): number[] | null {
+  const keys = new Set(episode.scoreGauges ?? episode.gauges.map((gauge) => gauge.key));
+  const deltaOf = (effects: GaugeEffect[] | undefined) =>
+    (effects ?? []).reduce((sum, effect) => sum + (keys.has(effect.key) ? effect.delta : 0), 0);
+
+  let usesScore = false;
+  const memo = new Map<string, Set<number>>();
+  const visiting = new Set<string>();
+
+  const visit = (id: string): Set<number> => {
+    if (id === SCORE_ENDING) {
+      usesScore = true;
+      return new Set([0]);
+    }
+    const cached = memo.get(id);
+    if (cached) return cached;
+    // 輪になっている遷移は数えない（別の検査で行き止まり・到達性を見る）
+    if (visiting.has(id)) return new Set();
+    visiting.add(id);
+
+    const shot = episode.shots.find((candidate) => candidate.id === id);
+    const result = new Set<number>();
+    if (shot?.branch) {
+      for (const option of [...shot.branch.choices, shot.branch.onTimeout]) {
+        const delta = deltaOf(option.effects);
+        for (const rest of visit(option.nextShotId)) result.add(rest + delta);
+      }
+    } else if (shot?.next) {
+      for (const rest of visit(shot.next)) result.add(rest);
+    }
+
+    visiting.delete(id);
+    memo.set(id, result);
+    return result;
+  };
+
+  const scores = [...visit(episode.startShotId)].sort((a, b) => a - b);
+  return usesScore ? scores : null;
+}
+
+/**
+ * 点数ごとの「選び方の数」（時間切れも1つの選び方として数える）。
+ * 結末の点数帯を決めるときに、どの結末に何通りで届くかを見るために使う。
+ */
+export function scoreDistribution(episode: Episode): Map<number, number> {
+  const keys = new Set(episode.scoreGauges ?? episode.gauges.map((gauge) => gauge.key));
+  const deltaOf = (effects: GaugeEffect[] | undefined) =>
+    (effects ?? []).reduce((sum, effect) => sum + (keys.has(effect.key) ? effect.delta : 0), 0);
+  const memo = new Map<string, Map<number, number>>();
+  const visiting = new Set<string>();
+
+  const merge = (into: Map<number, number>, from: Map<number, number>, shift: number) => {
+    for (const [score, count] of from) into.set(score + shift, (into.get(score + shift) ?? 0) + count);
+  };
+
+  const visit = (id: string): Map<number, number> => {
+    if (id === SCORE_ENDING) return new Map([[0, 1]]);
+    const cached = memo.get(id);
+    if (cached) return cached;
+    if (visiting.has(id)) return new Map();
+    visiting.add(id);
+    const shot = episode.shots.find((candidate) => candidate.id === id);
+    const result = new Map<number, number>();
+    if (shot?.branch) {
+      for (const option of [...shot.branch.choices, shot.branch.onTimeout]) {
+        merge(result, visit(option.nextShotId), deltaOf(option.effects));
+      }
+    } else if (shot?.next) {
+      merge(result, visit(shot.next), 0);
+    }
+    visiting.delete(id);
+    memo.set(id, result);
+    return result;
+  };
+
+  return visit(episode.startShotId);
+}
 
 /**
  * エピソードの検査。
@@ -37,6 +122,9 @@ export function validateEpisode(
   const gaugeKeys = new Set(episode.gauges.map((gauge) => gauge.key));
   const placeIds = new Set(production.places.map((place) => place.id));
   const characterIds = new Set(production.characters.map((character) => character.id));
+  const keyframeIds = new Set((production.keyframes ?? []).map((keyframe) => keyframe.id));
+  const endingShotSet = new Set(episode.endings.map((ending) => ending.shotId));
+  const scoreTiers = scoreEndings(episode);
 
   for (const shot of episode.shots) {
     const at = `${where}/${shot.id}`;
@@ -52,6 +140,14 @@ export function validateEpisode(
         if (!characterIds.has(characterId)) {
           problems.push(`${at}: 知らない登場人物を指している（${characterId}）`);
         }
+      }
+      for (const frameId of [note.startFrame, note.endFrame]) {
+        if (frameId && !keyframeIds.has(frameId)) {
+          problems.push(`${at}: 知らないキーフレームを指している（${frameId}）`);
+        }
+      }
+      if (!note.imagePrompt && !note.startFrame) {
+        problems.push(`${at}: imagePrompt も startFrame も無い（最初のコマが決まらない）`);
       }
     }
     if (shot.durationSec <= 0) {
@@ -107,9 +203,50 @@ export function validateEpisode(
       if (shot.next) {
         problems.push(`${at}: branch と next の両方がある（next は無視される）`);
       }
+
+      const targets = [
+        ...branch.choices.map((choice) => choice.nextShotId),
+        branch.onTimeout.nextShotId,
+      ].filter((id) => id !== SCORE_ENDING);
+
+      // 選択は最後のコマで止めて出すので、分岐した先はそのコマから始める（継ぎ目を消す）
+      const pausedFrame = production.shots[shot.id]?.endFrame;
+      if (pausedFrame) {
+        for (const targetId of new Set(targets)) {
+          if (endingShotSet.has(targetId)) continue;
+          const start = production.shots[targetId]?.startFrame;
+          if (start !== pausedFrame) {
+            problems.push(
+              `${at}: 分岐先 ${targetId} の始点が選択のコマ（${pausedFrame}）と違う（いまは ${start ?? '未指定'}）`,
+            );
+          }
+        }
+      }
+
+      // 分かれた2本は同じショットに合流させる（結末に入る場合を除く）
+      const joins = new Set(
+        [...new Set(targets)]
+          .filter((id) => !endingShotSet.has(id))
+          .map((id) => episode.shots.find((candidate) => candidate.id === id))
+          .filter((target) => target?.kind === 'reaction')
+          .map((target) => target?.next)
+          .filter((next): next is string => Boolean(next))
+          .filter((next) => next === SCORE_ENDING || !endingShotSet.has(next)),
+      );
+      if (joins.size > 1) {
+        problems.push(
+          `${at}: 分岐した反応ショットが別々の場所へ進んでいる（${[...joins].join(' / ')}）。合流させること`,
+        );
+      }
     }
 
     for (const nextId of nextIdsOf(shot)) {
+      if (nextId === SCORE_ENDING) {
+        if (scoreTiers.length === 0) {
+          problems.push(`${at}: 点数で結末へ進むのに、minScore を持つ結末が1つもない`);
+        }
+        continue;
+      }
       if (!ids.has(nextId)) problems.push(`${at}: 遷移先が存在しない（${nextId}）`);
     }
   }
@@ -143,11 +280,30 @@ export function validateEpisode(
     seen.add(id);
     const shot = episode.shots.find((candidate) => candidate.id === id);
     if (!shot) continue;
-    const nexts = nextIdsOf(shot);
+    const nexts = nextIdsOf(shot).flatMap((next) =>
+      next === SCORE_ENDING ? scoreTiers.map((tier) => tier.shotId) : [next],
+    );
     if (nexts.length === 0 && !endingShotIds.has(id)) {
       problems.push(`${where}/${id}: 行き止まり（結末でないのに次がない）`);
     }
     queue.push(...nexts);
+  }
+
+  // 点数で選ぶ結末が、どれも実際に届く点数になっているか
+  const scores = reachableScores(episode);
+  if (scores) {
+    if (scores.length === 0) {
+      problems.push(`${where}: 点数で結末へ進む経路が1本もない`);
+    }
+    for (const tier of scoreTiers) {
+      const reached = scores.some((score) => endingForScore(episode, score)?.id === tier.id);
+      if (!reached) {
+        problems.push(
+          `${where}: 結末「${tier.type}」（${tier.minScore}点〜）に届く選び方がない。` +
+            `取りうる点数は ${scores[0]}〜${scores[scores.length - 1]}`,
+        );
+      }
+    }
   }
 
   for (const id of ids) {

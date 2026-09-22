@@ -69,7 +69,9 @@ export function ResultCard({
           {byScore && (
             <p className="mt-3 text-xs tabular-nums" style={{ color: 'var(--c-text-muted)' }}>
               点数 {score}
-              {ending.minScore !== undefined && `（${ending.minScore}点以上の結末）`}
+              {ending.minScore !== undefined &&
+                Number.isFinite(ending.minScore) &&
+                `（${ending.minScore}点以上の結末）`}
             </p>
           )}
         </div>
@@ -98,8 +100,12 @@ export function ResultCard({
           <ul className="mt-2 space-y-1">
             {listed.map((item) => {
               const seen = collectedEndingIds.includes(item.id);
-              const band =
-                byScore && item.minScore !== undefined ? `（${item.minScore}点〜）` : '';
+              // 最下位（minScore: -Infinity）は「それ未満」と書く
+              const band = !byScore || item.minScore === undefined
+                ? ''
+                : Number.isFinite(item.minScore)
+                  ? `${item.minScore}点〜`
+                  : 'それ未満';
               return (
                 <li
                   key={item.id}
