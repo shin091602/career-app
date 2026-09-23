@@ -10,4 +10,6 @@ import { pilotEpisode02 } from './pilot-02';
  *
  * エクスポート名 `episodes` はノベル型プロトタイプで共通なので変更しないこと。
  */
-export const episodes: Episode[] = [bankEpisode01, pilotEpisode, pilotEpisode02];
+// 素材が入っている pilot-02 を先頭にして、/novel-bank で通しで触れるようにしている。
+// 本編（bank-ep01）の素材が揃ったら先頭に戻す。
+export const episodes: Episode[] = [pilotEpisode02, bankEpisode01, pilotEpisode];

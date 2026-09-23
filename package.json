@@ -11,7 +11,8 @@
     "lint": "tsc -b --noEmit",
     "shotlist": "tsx --tsconfig tsconfig.app.json scripts/build-shotlist.mts",
     "import-assets": "tsx --tsconfig tsconfig.app.json scripts/import-assets.mts",
-    "media": "tsx --tsconfig tsconfig.app.json scripts/media/cli.mts"
+    "media": "tsx --tsconfig tsconfig.app.json scripts/media/cli.mts",
+    "subtitles": "tsx --tsconfig tsconfig.app.json scripts/check-subtitles.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

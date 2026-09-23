@@ -37,8 +37,8 @@ export const pilotEpisode02: Episode = {
       imageAssetId: 'k-t1-walk',
       telop: { time: '17:40', place: '港南支店 応接室' },
       subtitles: [
-        { speaker: '融資課長', text: '新人、この融資は君が判断しろ。', atSec: 0.8 },
-        { speaker: '融資課長', text: '明日の朝までだ。', atSec: 3.8 },
+        { speaker: '融資課長', text: '新人、この融資は君が判断しろ。', atSec: 0.2 },
+        { speaker: '融資課長', text: '明日の朝までだ。', atSec: 2.5 },
       ],
       branch: {
         timeLimitSec: 8,
@@ -71,8 +71,8 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-t1a-accept',
       imageAssetId: 'k-t1-wait',
       subtitles: [
-        { speaker: '融資課長', text: '……即答か。', atSec: 0.6 },
-        { speaker: '融資課長', text: 'なら根拠も、明日聞かせてもらう。', atSec: 2.6 },
+        { speaker: '融資課長', text: '……即答か。', atSec: 0.2 },
+        { speaker: '融資課長', text: 'なら根拠も、明日聞かせてもらう。', atSec: 2.2 },
       ],
       next: 't2-plea',
     },
@@ -83,11 +83,11 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-t1b-criteria',
       imageAssetId: 'k-t1-wait',
       subtitles: [
-        { speaker: '融資課長', text: 'いい質問だ。', atSec: 0.6 },
+        { speaker: '融資課長', text: 'いい質問だ。', atSec: 0.3 },
         {
           speaker: '融資課長',
           text: '返せるかどうか。それだけを見ろ。',
-          atSec: 2.6,
+          atSec: 2.2,
           terms: [
             {
               term: '返済能力',
@@ -108,8 +108,8 @@ export const pilotEpisode02: Episode = {
       imageAssetId: 'k-t2-bow',
       telop: { time: '18:05', place: '港南支店 応接室' },
       subtitles: [
-        { speaker: '山田社長', text: 'どうか……', atSec: 1.4 },
-        { speaker: '山田社長', text: 'この工場を守りたいんです。', atSec: 3.0 },
+        { speaker: '山田社長', text: 'どうか……', atSec: 0.6 },
+        { speaker: '山田社長', text: 'この工場を守りたいんです。', atSec: 3.6 },
       ],
       branch: {
         timeLimitSec: 8,
@@ -145,8 +145,8 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-t2a-promise',
       imageAssetId: 'k-t2-look',
       subtitles: [
-        { speaker: '山田社長', text: 'ありがとうございます……！', atSec: 0.8 },
-        { speaker: '山田社長', text: 'これで、みんなに顔向けできます。', atSec: 3.4 },
+        { speaker: '山田社長', text: 'ありがとうございます……！', atSec: 0.3 },
+        { speaker: '山田社長', text: 'これで、みんなに顔向けできます。', atSec: 4.7 },
       ],
       next: 't3-proof',
     },
@@ -160,7 +160,7 @@ export const pilotEpisode02: Episode = {
         {
           speaker: '山田社長',
           text: '……これが、うちの3年分です。',
-          atSec: 1.0,
+          atSec: 0.5,
           terms: [
             {
               term: '決算書',
@@ -168,7 +168,7 @@ export const pilotEpisode02: Episode = {
             },
           ],
         },
-        { speaker: '山田社長', text: '1社に、ずいぶん頼ってましてね。', atSec: 4.0 },
+        { speaker: '山田社長', text: '1社に、ずいぶん頼ってましてね。', atSec: 4.8 },
       ],
       next: 't3-proof',
     },
@@ -228,8 +228,8 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-t3b-risk',
       imageAssetId: 'k-t3-lean',
       subtitles: [
-        { speaker: '融資課長', text: '……そこに気づいたか。', atSec: 0.6 },
-        { speaker: '融資課長', text: 'なら、打てる手もある。', atSec: 3.0 },
+        { speaker: '融資課長', text: '……そこに気づいたか。', atSec: 0.3 },
+        { speaker: '融資課長', text: 'なら、打てる手もある。', atSec: 3.4 },
       ],
       next: SCORE_ENDING,
     },
@@ -263,8 +263,8 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-e-mid',
       imageAssetId: 'k-end',
       subtitles: [
-        { speaker: '融資課長', text: '明日の朝、もう一度だ。', atSec: 0.8 },
-        { speaker: '融資課長', text: '数字の出どころまで見てこい。', atSec: 3.6 },
+        { speaker: '融資課長', text: '明日の朝、もう一度だ。', atSec: 0.4 },
+        { speaker: '融資課長', text: '数字の出どころまで見てこい。', atSec: 3.7 },
       ],
     },
     {
@@ -274,8 +274,8 @@ export const pilotEpisode02: Episode = {
       videoAssetId: 'v-e-low',
       imageAssetId: 'k-end',
       subtitles: [
-        { speaker: '融資課長', text: '……今回は、私が見る。', atSec: 1.0 },
-        { speaker: '融資課長', text: '社長の顔だけで、判断するな。', atSec: 3.8 },
+        { speaker: '融資課長', text: '……今回は、私が見る。', atSec: 0.4 },
+        { speaker: '融資課長', text: '社長の顔だけで、判断するな。', atSec: 4.1 },
       ],
     },
   ],
