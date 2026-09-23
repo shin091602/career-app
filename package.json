@@ -12,7 +12,8 @@
     "shotlist": "tsx --tsconfig tsconfig.app.json scripts/build-shotlist.mts",
     "import-assets": "tsx --tsconfig tsconfig.app.json scripts/import-assets.mts",
     "media": "tsx --tsconfig tsconfig.app.json scripts/media/cli.mts",
-    "subtitles": "tsx --tsconfig tsconfig.app.json scripts/check-subtitles.mts"
+    "subtitles": "tsx --tsconfig tsconfig.app.json scripts/check-subtitles.mts",
+    "playback": "tsx --tsconfig tsconfig.app.json scripts/check-playback.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
@@ -27,6 +28,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^27.4.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",

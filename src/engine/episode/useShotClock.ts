@@ -11,11 +11,23 @@ export interface ShotClock {
   duration: number;
 }
 
+interface ClockState {
+  /** どのショットを測っているか。**ショットが変わった瞬間に前の値を返さないために持つ** */
+  shotId: string;
+  elapsed: number;
+  /** 動画から分かった実際の長さ */
+  mediaDuration: number | null;
+}
+
 /**
  * ショット内の経過秒。
  *
  * 動画が再生できているときは動画の再生位置を、
  * 動画が無い（絵コンテ・静止画の）ときは実時間を使う。
+ *
+ * 値は**測っているショットIDとセット**で持つ。
+ * ショットが切り替わった直後に前のショットの経過秒を返すと、
+ * 「もう終わっている」と誤判定して次のクリップを飛ばしてしまうため。
  */
 export function useShotClock(
   shotId: string,
@@ -23,16 +35,14 @@ export function useShotClock(
   running: boolean,
   videoRef: RefObject<HTMLVideoElement | null>,
 ): ShotClock {
-  const [elapsed, setElapsed] = useState(0);
-  const [mediaDuration, setMediaDuration] = useState<number | null>(null);
+  const [state, setState] = useState<ClockState>({ shotId, elapsed: 0, mediaDuration: null });
   const startedAtRef = useRef(0);
   const accumulatedRef = useRef(0);
 
   // ショットが変わったら0から測り直す
   useEffect(() => {
     accumulatedRef.current = 0;
-    setElapsed(0);
-    setMediaDuration(null);
+    setState({ shotId, elapsed: 0, mediaDuration: null });
   }, [shotId]);
 
   useEffect(() => {
@@ -43,15 +53,19 @@ export function useShotClock(
 
     const tick = () => {
       const video = videoRef.current;
-      if (video && video.readyState > 0 && !Number.isNaN(video.currentTime)) {
-        setElapsed(video.currentTime);
-        if (Number.isFinite(video.duration) && video.duration > 0) {
-          setMediaDuration((prev) => (prev === video.duration ? prev : video.duration));
+      setState((prev) => {
+        if (video && video.readyState > 0 && !Number.isNaN(video.currentTime)) {
+          const mediaDuration =
+            Number.isFinite(video.duration) && video.duration > 0 ? video.duration : null;
+          return { shotId, elapsed: video.currentTime, mediaDuration };
         }
-      } else {
         const wall = (performance.now() - startedAtRef.current) / 1000;
-        setElapsed(Math.min(accumulatedRef.current + wall, durationSec));
-      }
+        return {
+          shotId,
+          elapsed: Math.min(accumulatedRef.current + wall, durationSec),
+          mediaDuration: prev.shotId === shotId ? prev.mediaDuration : null,
+        };
+      });
       frame = requestAnimationFrame(tick);
     };
 
@@ -63,5 +77,10 @@ export function useShotClock(
     };
   }, [shotId, durationSec, running, videoRef]);
 
-  return { elapsed, duration: mediaDuration ?? durationSec };
+  // 測っているショットが違うあいだは 0 秒として扱う
+  const current = state.shotId === shotId ? state : null;
+  return {
+    elapsed: current?.elapsed ?? 0,
+    duration: current?.mediaDuration ?? durationSec,
+  };
 }
