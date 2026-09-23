@@ -206,7 +206,7 @@ export function EpisodePlayer({ episode, prototypeId }: EpisodePlayerProps) {
         />
       )}
 
-      {!started && <TapToStart onStart={() => setStarted(true)} />}
+      {!started && <TapToStart prologue={episode.prologue} onStart={() => setStarted(true)} />}
 
       {logOpen && <SubtitleLog entries={state.progress.log} onClose={() => setLogOpen(false)} />}
     </EpisodeShell>

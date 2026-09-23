@@ -65,6 +65,11 @@ export interface TimeoutOutcome {
  * 分かれたあとは合流させる（理由は CLAUDE.md の「ショットの書き方」を参照）。
  */
 export interface Branch {
+  /**
+   * 選択肢の上に出す短い問い（例：「いま、何を確かめる？」）。
+   * その場面で何を判断しているのかを伝える。20文字以内
+   */
+  question?: string;
   /** 選択肢を出す秒数。省略するとショットの終わりで出す */
   atSec?: number;
   /** 制限時間（秒）。省略すると待ち続ける */
@@ -151,6 +156,18 @@ export interface EndingCard {
   minScore?: number;
 }
 
+/**
+ * 本編に入る前の状況説明。
+ * 最初のタップの画面に重ねて出す。読み終えてタップすると本編が始まる。
+ * 長い説明画面にはしない（3〜4行まで）。
+ */
+export interface EpisodePrologue {
+  /** 1行ずつ。1行30文字以内 */
+  lines: string[];
+  /** 遊び方の一言（例：「選択肢は2つ。黙っていても話は進みます」） */
+  hint?: string;
+}
+
 export interface Episode extends VerifiableMeta {
   id: string;
   title: string;
@@ -167,6 +184,13 @@ export interface Episode extends VerifiableMeta {
   endings: EndingCard[];
   /** 結末の点数に使うゲージ。省略時はすべてのゲージの合計 */
   scoreGauges?: string[];
+  /** 本編に入る前の状況説明 */
+  prologue?: EpisodePrologue;
+  /**
+   * 結果カードに出す「この回で見た仕事のこと」。
+   * 体験が何の職業体験だったのかを、最後に言葉にする。1行40文字以内、4行まで
+   */
+  lessons?: string[];
 }
 
 /** 結末を決める点数（ゲージの合計） */

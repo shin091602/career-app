@@ -80,6 +80,12 @@ export const production: ProductionNotes = {
   // Flow の Frames to Video で始点・終点に使う静止画（pilot-02）
   keyframes: [
     {
+      id: 'k-p0-desk',
+      name: 'プロローグ：手元の決算資料を見下ろしている',
+      prompt: `支店の応接室の低いテーブルを、ソファに座ったこちらが見下ろしている。決算書の紙束、電卓、ボールペン、湯呑み。紙の文字は読み取れないほど浅い焦点。手前に自分の手がわずかに入る。夕方の窓の光。人物の顔は映らない。${STYLE}`,
+      placeId: 'pl-reception',
+    },
+    {
       id: 'k-t1-walk',
       name: '課長がファイルを手に、こちらへ歩いてくる',
       prompt: `支店の応接室。濃紺のスーツの40代後半の男性が、厚いファイルを片手に、ソファに座ったこちらへ歩いてくる途中。座った目線の高さから見たウエストショット。夕方の窓の光。${STYLE}`,
@@ -131,6 +137,18 @@ export const production: ProductionNotes = {
   ],
 
   shots: {
+    // ===== 試作エピソード2のプロローグ =====
+    'p0-desk': {
+      motionPrompt:
+        '資料をめくっていた指が止まり、カメラがゆっくり持ち上がって、部屋に入ってくるスーツの男性の姿をとらえる。',
+      cameraNote: `${FIRST_PERSON} 手元から正面へ、ゆっくり視線を上げる動き。`,
+      placeId: 'pl-reception',
+      characterIds: ['ref-kacho'],
+      soundNote: '紙をめくる音、遠くの電話の音、近づいてくる革靴の足音。',
+      startFrame: 'k-p0-desk',
+      endFrame: 'k-t1-walk',
+    },
+
     // ===== 第1話 =====
     's01-hook': {
       imagePrompt: `町工場の応接スペース。60代の男性社長が、机越しにこちらへ身を乗り出して頼み込んでいる。逆光ぎみの昼の光。${STYLE}`,

@@ -93,6 +93,22 @@ export function ResultCard({
           </div>
         </section>
 
+        {episode.lessons && episode.lessons.length > 0 && (
+          <section>
+            <h3 className="mb-2 text-xs font-bold text-white/80">この回で見た仕事のこと</h3>
+            <ul className="space-y-1.5 rounded-xl bg-white/10 px-3 py-3">
+              {episode.lessons.map((lesson) => (
+                <li key={lesson} className="flex gap-2 text-sm leading-relaxed text-white/90">
+                  <span aria-hidden="true" style={{ color: 'var(--c-accent)' }}>
+                    ・
+                  </span>
+                  <span>{lesson}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <section className="rounded-xl bg-white/10 px-3 py-3">
           <p className="text-sm font-bold text-white">
             エンディング {collected} / {total}

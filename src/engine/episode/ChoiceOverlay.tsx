@@ -73,6 +73,15 @@ export function ChoiceOverlay({
         </div>
       )}
 
+      {branch.question && (
+        <p
+          className="mb-2 px-4 text-center text-sm font-bold text-white"
+          style={{ fontFamily: 'var(--novel-font-display)', textShadow: '0 2px 8px rgba(0,0,0,.7)' }}
+        >
+          {branch.question}
+        </p>
+      )}
+
       <div className="flex gap-2 px-4">
         {([
           ['left', left],

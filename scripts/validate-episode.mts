@@ -119,6 +119,28 @@ export function validateEpisode(
     problems.push(`${where}: 結末が1つもない`);
   }
 
+  // プロローグと学びは「短く」を守らせる（長い説明画面にしないため）
+  if (episode.prologue) {
+    if (episode.prologue.lines.length > 4) {
+      problems.push(`${where}: プロローグが ${episode.prologue.lines.length} 行ある（4行まで）`);
+    }
+    for (const line of episode.prologue.lines) {
+      if ([...line].length > 30) {
+        problems.push(`${where}: プロローグの行が長い（${[...line].length}文字）「${line}」`);
+      }
+    }
+  }
+  if (episode.lessons) {
+    if (episode.lessons.length > 4) {
+      problems.push(`${where}: 「この回で見た仕事のこと」が ${episode.lessons.length} 行ある（4行まで）`);
+    }
+    for (const lesson of episode.lessons) {
+      if ([...lesson].length > 40) {
+        problems.push(`${where}: 「この回で見た仕事のこと」が長い（${[...lesson].length}文字）「${lesson}」`);
+      }
+    }
+  }
+
   const gaugeKeys = new Set(episode.gauges.map((gauge) => gauge.key));
   const placeIds = new Set(production.places.map((place) => place.id));
   const characterIds = new Set(production.characters.map((character) => character.id));
@@ -196,6 +218,9 @@ export function validateEpisode(
             problems.push(`${at}: onTimeout が未定義のゲージを触っている（${effect.key}）`);
           }
         }
+      }
+      if (branch.question && [...branch.question].length > 20) {
+        problems.push(`${at}: 選択の問いが長い（${[...branch.question].length}文字）。20文字以内にする`);
       }
       if (branch.atSec !== undefined && branch.atSec > shot.durationSec) {
         problems.push(`${at}: branch.atSec がショットの尺を超えている`);

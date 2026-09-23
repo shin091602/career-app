@@ -22,12 +22,41 @@ export const pilotEpisode02: Episode = {
   verified: false,
   sources: [],
   audioMode: 'embedded',
-  startShotId: 't1-order',
+  startShotId: 'p0-desk',
+  prologue: {
+    lines: [
+      '入行1年目。配属は融資課。',
+      '町工場から、3,000万円の相談。',
+      '判断を任された。明日の朝までに。',
+    ],
+    hint: '選択肢は2つ。迷って黙っていても、話は進みます。',
+  },
+  lessons: [
+    '融資は「返せるかどうか」で判断する',
+    '相手の熱意と、数字の裏づけは別々に確かめる',
+    '売上が1社に偏ると、止まったとき一気に苦しくなる',
+  ],
   gauges: [
     { key: 'trust', label: '信頼', description: '相手の話を正面から受け止められたか。' },
     { key: 'result', label: '根拠', description: '判断を数字と事実で支えられたか。' },
   ],
   shots: [
+    // ===== プロローグ：手元の資料から、課長が入ってくるまで =====
+    {
+      id: 'p0-desk',
+      kind: 'story',
+      durationSec: 8,
+      videoAssetId: 'v-p0-desk',
+      imageAssetId: 'k-p0-desk',
+      telop: { time: '17:38', place: '港南支店 応接室' },
+      subtitles: [
+        { speaker: '（あなた）', text: '入行1年目。配属は、融資課。', atSec: 0.6 },
+        { speaker: '（あなた）', text: '町工場から、3,000万円の相談。', atSec: 3.2 },
+        { speaker: '（あなた）', text: '……数字は、ひととおり見た。', atSec: 5.8 },
+      ],
+      next: 't1-order',
+    },
+
     // ===== ターン1：課長からの指示 =====
     {
       id: 't1-order',
@@ -41,6 +70,7 @@ export const pilotEpisode02: Episode = {
         { speaker: '融資課長', text: '明日の朝までだ。', atSec: 2.5 },
       ],
       branch: {
+        question: '課長に、どう返す？',
         timeLimitSec: 8,
         onTimeout: {
           label: '黙ってうなずいた',
@@ -112,6 +142,7 @@ export const pilotEpisode02: Episode = {
         { speaker: '山田社長', text: 'この工場を守りたいんです。', atSec: 3.6 },
       ],
       branch: {
+        question: '社長に、どう答える？',
         timeLimitSec: 8,
         onTimeout: {
           label: '言葉が出なかった',
@@ -186,6 +217,7 @@ export const pilotEpisode02: Episode = {
         { speaker: '融資課長', text: '根拠は？　数字で説明できるか。', atSec: 3.0 },
       ],
       branch: {
+        question: '根拠として、何を出す？',
         timeLimitSec: 10,
         onTimeout: {
           label: '答えられなかった',
