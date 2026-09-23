@@ -210,7 +210,7 @@ export const pilotEpisode02: Episode = {
       kind: 'story',
       durationSec: 8,
       videoAssetId: 'v-t3-proof',
-      imageAssetId: 'k-t3-sit',
+      imageAssetId: 'k-t3-desk',
       telop: { time: '19:20', place: '港南支店 応接室' },
       subtitles: [
         { speaker: '融資課長', text: 'で、どうだった。', atSec: 0.6 },

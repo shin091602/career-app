@@ -114,11 +114,11 @@ export const production: ProductionNotes = {
       characterIds: ['ref-yamada'],
     },
     {
-      id: 'k-t3-sit',
-      name: '夜。課長が正面のソファに座っている',
-      prompt: `夜の支店の応接室。窓の外は暗く、室内灯だけ。濃紺のスーツの40代後半の男性が、低いテーブルを挟んで正面のソファに座り、膝の上のファイルからこちらへ視線を上げる。ウエストショット。${STYLE}`,
+      // 顔の写る始点は Flow の判定で弾かれたので、手元から始める構図にしてある
+      id: 'k-t3-desk',
+      name: '夜。テーブルの上の決算書と、向かいに座る人の膝',
+      prompt: `夜の支店の応接室。窓の外は暗く、室内灯だけ。低いテーブルの上に閉じた紙のファイルと空の湯呑み。テーブルの向こう側に、濃紺のスーツのズボンの膝から下だけがぼけて見える。顔や上半身は画面に入らない。座ったこちらが手元を見下ろしている角度。${STYLE}`,
       placeId: 'pl-reception',
-      characterIds: ['ref-kacho'],
     },
     {
       id: 'k-t3-lean',
@@ -352,12 +352,12 @@ export const production: ProductionNotes = {
     },
     't3-proof': {
       motionPrompt:
-        '課長がファイルから顔を上げて短く問い、ファイルを閉じてわずかに身を乗り出し、目を細めて問い詰める。言い終えたらこちらを見据えたまま止まる。',
-      cameraNote: `${FIRST_PERSON} 夜。緊張を高めるため、カメラはごくゆっくり課長へ寄る。`,
+        'テーブルの上のファイルに向かいの人物の手が伸びて閉じ、カメラがゆっくり持ち上がって相手の顔をとらえる。相手は問いかけながら、わずかに身を乗り出す。言い終えたら、その姿勢のまま静止する。',
+      cameraNote: `${FIRST_PERSON} 夜。手元から相手の顔へ、ゆっくり視線を上げる。`,
       placeId: 'pl-reception',
       characterIds: ['ref-kacho'],
       soundNote: '静かな夜の室内。ファイルを閉じる音。',
-      startFrame: 'k-t3-sit',
+      startFrame: 'k-t3-desk',
       endFrame: 'k-t3-lean',
     },
     't3a-growth': {
